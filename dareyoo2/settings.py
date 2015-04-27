@@ -74,12 +74,29 @@ WSGI_APPLICATION = 'dareyoo2.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
+import dj_database_url
+
+
+class MasterSlaveRouter(object):
+    def db_for_read(self, model, **hints):
+        return 'read-only'
+
+    def db_for_write(self, model, **hints):
+        return 'default'
+
+    def allow_relation(self, obj1, obj2, **hints):
+        return True
+
+    def allow_syncdb(self, db, model):
+        return True
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL')),
+    'read-only': dj_database_url.config(default=os.environ.get('READ_ONLY_DATABASE_URL'))
 }
+
+DATABASE_ROUTERS = ['dareyoo2.settings.MasterSlaveRouter',]
 
 
 # Internationalization
