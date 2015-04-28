@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -117,3 +118,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# DAREYOO
+
+DEFAULT_PROFILE_PIC_URL = STATIC_URL + 'default_profile_pics/profile_%s.png'
+
+def get_default_profile_pic(user_id):
+    return DEFAULT_PROFILE_PIC_URL % ((user_id or 1) % 10)
