@@ -4,10 +4,14 @@ from django.contrib.auth import get_user_model
 
 
 class DareyooUserProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile')
     invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name='users_invited')
     campaign = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='profiles', null=True, blank=True)
+    gender = models.CharField(max_length=255, blank=True, null=True)
+    locale = models.CharField(max_length=255, blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    timezone = models.CharField(max_length=255, blank=True, null=True)
     is_pro = models.BooleanField(default=False)
     push_notifications = models.BooleanField(default=True)
     email_notifications = models.BooleanField(default=True)
