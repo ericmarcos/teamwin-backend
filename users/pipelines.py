@@ -32,4 +32,4 @@ def save_profile_picture(backend, user, response, *args, **kwargs):
             user.profile.pic.save('{0}_social.{1}'.format(user.id, ext), ContentFile(resp.content))
             user.profile.save()
         except Exception as e:
-            print e
+            pass
