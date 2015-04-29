@@ -44,6 +44,12 @@ class PoolOption(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='pool_options', null=True, blank=True)
 
+    def get_pic_url(self):
+        if self.pic:
+            return self.pic._get_url()
+        else:
+            return ""
+
     def __unicode__(self):
         return str(self.name)
 
@@ -62,6 +68,12 @@ class Team(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='teams', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
+
+    def get_pic_url(self):
+        if self.pic:
+            return self.pic._get_url()
+        else:
+            return ""
 
     def __unicode__(self):
         return str(self.name)
@@ -91,6 +103,12 @@ class League(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
     teams = models.ManyToManyField(Team, related_name='leagues')
 
+    def get_pic_url(self):
+        if self.pic:
+            return self.pic._get_url()
+        else:
+            return ""
+
     def __unicode__(self):
         return str(self.name)
 
@@ -101,6 +119,12 @@ class Prize(models.Model):
     description = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='prizes', null=True, blank=True)
     order = models.IntegerField(default=1)
+
+    def get_pic_url(self):
+        if self.pic:
+            return self.pic._get_url()
+        else:
+            return ""
 
     def __unicode__(self):
         return str(self.name)
