@@ -58,6 +58,7 @@ class PoolResult(models.Model):
     pool = models.ForeignKey(Pool, blank=True, null=True, related_name='results')
     name = models.CharField(max_length=255, blank=True, null=True)
     players = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='results')
+    is_winner = models.BooleanField(default=False)
 
     def __unicode__(self):
         return str(self.name)
