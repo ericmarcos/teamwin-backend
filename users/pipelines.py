@@ -8,7 +8,7 @@ from .models import DareyooUserProfile
 
 
 def save_profile(backend, user, response, *args, **kwargs):
-    if user and backend.name == 'facebook':
+    if user and backend.name == 'facebook' and kwargs.get('is_new'):
         try:
             user.profile
         except:
@@ -22,7 +22,7 @@ def save_profile(backend, user, response, *args, **kwargs):
 
 #http://stackoverflow.com/questions/19890824/save-facebook-profile-picture-in-model-using-python-social-auth
 def save_profile_picture(backend, user, response, *args, **kwargs):
-    if user and  backend.name == 'facebook':
+    if user and  backend.name == 'facebook' and kwargs.get('is_new'):
         url = 'http://graph.facebook.com/{0}/picture'.format(response['id'])
         params = {'type': 'normal', 'height': 200, 'width': 200}
         try:
