@@ -17,8 +17,8 @@ class DareyooUserProfile(models.Model):
     email_notifications = models.BooleanField(default=True)
 
     def get_profile_pic_url(self):
-        if self.profile_pic:
-            return self.profile_pic._get_url().split('?')[0]
+        if self.pic:
+            return self.pic._get_url().split('?')[0]
         else:
             return settings.get_default_profile_pic(self.user.id)
 
@@ -26,8 +26,8 @@ class DareyooUserProfile(models.Model):
         return "%s - %s" % (self.user.email, self.user.username)
 
 
-def get_fb_friends(self):
-    social_user = self.user.social_auth.filter(
+def get_fb_friends(user):
+    social_user = user.social_auth.filter(
         provider='facebook',
     ).first()
     if social_user:

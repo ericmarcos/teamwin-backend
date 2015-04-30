@@ -64,11 +64,74 @@ class PoolResult(models.Model):
         return str(self.name)
 
 
+class PlayerBelongsToTooManyTeams(Exception):
+    def __init__(self, user, *args, **kwargs):
+        super(Exception, self).__init__('The user %s belongs to too many teams' % user.id)
+
+
+class CaptainCantLeave(Exception):
+    def __init__(self, *args, **kwargs):
+        super(Exception, self).__init__('The captain can\'t leave the team')
+
+
 class Team(models.Model):
     players = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership', related_name='teams')
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='teams', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
+
+    def captain(self):
+        return self.players.filter(membership__is_captain=True).first()
+
+    def is_captain(self, user):
+        return self.players.filter(membership__is_captain=True, id=user.id).exists()
+
+    def active_players(self):
+        return self.players.filter(membership__state=Membership.STATE_ACTIVE)
+
+    def waiting_captain(self):
+        return self.players.filter(membership__state=Membership.STATE_WAITING_CAPTAIN)
+
+    def waiting_players(self):
+        return self.players.filter(membership__state=Membership.STATE_WAITING_PLAYER)
+
+    def check_user(self, user):
+        active_teams = Membership.objects.filter(player=user, state=Membership.STATE_ACTIVE).count()
+        if not user.profile.is_pro and active_teams >= settings.DAREYOO_MAX_TEAMS:
+            raise PlayerBelongsToTooManyTeams(user)
+
+    def request_enroll(self, user):
+        self.check_user(user)
+        m, created = Membership.objects.get_or_create(team=self, player=user)
+        if created:
+            m.state = m.STATE_WAITING_CAPTAIN
+            # TODO send request to captain
+        elif m.state == m.STATE_WAITING_PLAYER:
+            m.state = m.STATE_ACTIVE
+        else:
+            return False
+        m.save()
+        return m.state
+
+    def sign(self, user):
+        m, created = Membership.objects.get_or_create(team=self, player=user)
+        if created:
+            m.state = m.STATE_WAITING_PLAYER
+            #send request to player
+        elif m.state == m.STATE_WAITING_CAPTAIN:
+            self.check_user()
+            m.state = m.STATE_ACTIVE
+        else:
+            return False
+        m.save()
+        return m.state
+
+    def fire(self, user):
+        m = Membership.objects.get(team=self, player=user)
+        if m.is_captain:
+            raise CaptainCantLeave
+        m.delete()
+        return m.state
 
     def get_pic_url(self):
         if self.pic:
@@ -83,18 +146,18 @@ class Team(models.Model):
 class Membership(models.Model):
     STATE_WAITING_CAPTAIN = 'state_waiting_captain'
     STATE_WAITING_PLAYER = 'state_waiting_player'
-    STATE_ACCEPTED = 'state_accepted'
+    STATE_ACTIVE = 'state_active'
     STATE_CHOICES = (
         (STATE_WAITING_CAPTAIN, "Waiting captain"),
         (STATE_WAITING_PLAYER, "Waiting player"),
-        (STATE_ACCEPTED, "Accepted"),
+        (STATE_ACTIVE, "Active"),
     )
 
     player = models.ForeignKey(settings.AUTH_USER_MODEL)
     team = models.ForeignKey(Team)
     date_joined = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
     is_captain = models.BooleanField(default=False)
-    state = models.CharField(max_length=64, blank=True, null=True, choices=STATE_CHOICES, default=STATE_ACCEPTED)
+    state = models.CharField(max_length=64, blank=True, null=True, choices=STATE_CHOICES, default=STATE_ACTIVE)
 
 
 class League(models.Model):
