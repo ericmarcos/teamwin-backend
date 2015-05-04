@@ -16,8 +16,17 @@ class PoolAdmin(admin.ModelAdmin):
     inlines = [PoolResultInline, PoolOptionInline, ]
 
 
+class MembershipInline(admin.StackedInline):
+    model = Membership
+    extra = 0
+
+
+class TeamAdmin(admin.ModelAdmin):
+    inlines = [MembershipInline, ]
+
+
 admin.site.register(Pool, PoolAdmin)
-admin.site.register(Team)
+admin.site.register(Team, TeamAdmin)
 
 
 class PrizeInline(admin.StackedInline):
