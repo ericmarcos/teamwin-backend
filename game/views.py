@@ -29,7 +29,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         '''
         team = self.get_object()
         try:
-            enroll = team.request_enroll(self.request.user)
+            enroll = team.request_enroll(request.user)
         except Exception as e:
             return Response({'detail': str(e)},
                 status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -78,7 +78,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     def leave(self, request, pk=None):
         team = self.get_object()
         try:
-            team.fire(self.request.user)
+            team.fire(request.user)
         except Exception as e:
             return Response({'detail': str(e)},
                 status=status.HTTP_406_NOT_ACCEPTABLE)
