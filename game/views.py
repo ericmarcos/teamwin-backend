@@ -65,7 +65,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     @detail_route(methods=['post'])
     def fire(self, request, pk=None):
-        team.get_object()
+        team = self.get_object()
         user = get_user_model().objects.get(id=request.DATA.get('user_id'))
         try:
             team.fire(user)
@@ -76,7 +76,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     def leave(self, request, pk=None):
-        team.get_object()
+        team = self.get_object()
         try:
             team.fire(self.request.user)
         except Exception as e:
