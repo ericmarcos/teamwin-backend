@@ -11,7 +11,7 @@ from .serializers import *
 
 class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = TeamSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [TeamPermission,]
 
     def get_queryset(self):
         if self.request.DATA.get('friends'):
@@ -20,7 +20,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         else:
             return self.request.user.teams.all()
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     def request_enroll(self):
         '''
         When a player request to enter a team. If the captain of the team already
@@ -41,7 +41,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             resp = 'Nothing changed'
         return Response({'status': resp})
 
-    @detail_route(methods=['post'], permission_classes=[IsCaptain])
+    @detail_route(methods=['post'])
     def sign(self):
         '''
         When the captain wants to sign a player to enter a team. If the player already
@@ -63,7 +63,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             resp = 'Nothing changed'
         return Response({'status': resp})
 
-    @detail_route(methods=['post'], permission_classes=[IsCaptain])
+    @detail_route(methods=['post'])
     def fire(self):
         team.get_object()
         user = get_user_model().objects.get(id=request.DATA.get('user_id'))
@@ -74,7 +74,7 @@ class TeamViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_406_NOT_ACCEPTABLE)
         return Response({'status': 'Player %s was fired' % user.id})
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     def leave(self):
         team.get_object()
         try:

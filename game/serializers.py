@@ -36,10 +36,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class TeamSerializer(serializers.ModelSerializer):
     pic = serializers.ReadOnlyField(source='get_pic_url')
-    players = UserSerializer(many=True, source='active_players')
-    players_waiting_captain = UserSerializer(many=True, source='waiting_captain')
-    players_pending = UserSerializer(many=True, source='waiting_players')
-    captain = UserSerializer()
+    players = UserSerializer(many=True, source='active_players', read_only=True)
+    players_waiting_captain = UserSerializer(many=True, source='waiting_captain', read_only=True)
+    players_pending = UserSerializer(many=True, source='waiting_players', read_only=True)
+    captain = UserSerializer(read_only=True)
+    #prev_fixture
+    #current_fixture
 
     class Meta:
         model = Team
