@@ -4,7 +4,7 @@ from .views import *
 
 router = routers.DefaultRouter()
 router.register(r'teams', TeamViewSet, base_name='teams')
-router.register(r'pools', PoolViewSet)
+router.register(r'pools', PoolViewSet, base_name='pools')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

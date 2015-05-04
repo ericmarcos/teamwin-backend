@@ -78,11 +78,36 @@ class TeamViewSet(viewsets.ModelViewSet):
         try:
             team.fire(request.user)
         except Exception as e:
-            return Response({'detail': str(e)},
-                status=status.HTTP_406_NOT_ACCEPTABLE)
+            raise ParseError(detail=str(e))
         return Response({'status': 'You left the team %s' % team.id})
 
 
 class PoolViewSet(viewsets.ModelViewSet):
-    queryset = Pool.objects.all()
     serializer_class = PoolSerializer
+    permission_classes = [PoolPermission, ]
+    
+    def get_queryset(self):
+        if self.request.DATA.get('pending'):
+            return Pool.objects.pending(self.request.user)
+        else:
+            return Pool.objects.played(self.request.user)
+
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated,])
+    def play(self, request, pk=None):
+        pool = self.get_object()
+        try:
+            result = request.DATA['result']
+            pool.play(request.user, result)
+        except Exception as e:
+            raise ParseError(detail=str(e))
+        return Response({'status': 'Result %s played for pool %s' % (result, pool)})
+
+    @detail_route(methods=['post'])
+    def set(self, request, pk=None):
+        pool = self.get_object()
+        try:
+            result = request.DATA['result']
+            pool.set(result)
+        except Exception as e:
+            raise ParseError(detail=str(e))
+        return Response({'status': 'Result %s set for pool %s' % (result, pool)})

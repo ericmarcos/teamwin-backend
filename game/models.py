@@ -6,6 +6,39 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 
+class PoolQuerySet(models.QuerySet):
+
+    def state(self, state):
+        return self.filter(state=state)
+
+    def draft(self):
+        return self.state(Pool.STATE_DRAFT)
+
+    def open(self):
+        return self.state(Pool.STATE_OPEN)
+
+    def closed(self):
+        return self.state(Pool.STATE_CLOSED)
+
+    def set(self):
+        return self.state(Pool.STATE_SET)
+
+    def type(self, t):
+        return self.filter(pool_type=t)
+
+    def quiniela(self):
+        return self.type(Pool.TYPE_QUINIELA)
+
+    def public(self):
+        return self.filter(public=True)
+
+    def played(self, player):
+        return self.filter(results__players=player).distinct()
+
+    def pending(self, player):
+        return self.filter(fixtures__league__teams__players=player).exclude(results__players=player).distinct()
+
+
 class Pool(models.Model):
     STATE_DRAFT = 'state_draft'
     STATE_OPEN = 'state_open'
@@ -23,6 +56,8 @@ class Pool(models.Model):
         (TYPE_QUINIELA, 'Quiniela'),
     )
 
+    objects = PoolQuerySet.as_manager()
+
     title = models.CharField(max_length=255, blank=True, null=True)
     slug = models.SlugField(max_length=255, blank=True, null=True, default='')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name='pools_created')
@@ -35,6 +70,26 @@ class Pool(models.Model):
     state = models.CharField(max_length=64, blank=True, null=True, choices=STATE_CHOICES, default=STATE_DRAFT)
     pool_type = models.CharField(max_length=64, blank=True, null=True, choices=TYPE_CHOICES, default=TYPE_QUINIELA)
     public = models.BooleanField(default=True)
+
+    def play(self, player, result):
+        r = PoolResult.objects.get_or_create(pool=self, name=result)
+        r.players.add(player)
+        for team in player.teams.all():
+            for fixture in self.fixtures.all():
+                m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=player)
+                m.played += 1
+                m.save()
+
+    def set(self, result):
+        r = PoolResult.objects.get_or_create(pool=self, name=result)
+        r.is_winner = True
+        r.save()
+        for player in r.players.all():
+            for team in player.teams.all():
+                for fixture in self.fixtures.all():
+                    m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=player)
+                    m.played += 1
+                    m.save()
 
     def __unicode__(self):
         return str(self.title)
@@ -132,6 +187,8 @@ class Team(models.Model):
         if m.is_captain:
             raise CaptainCantLeave
         m.delete()
+        for f in self.current_fixtures():
+            Match.objects.filter(player=user, team=self, fixture=f).delete()
         return m.state
 
     def current_fixtures(self):
