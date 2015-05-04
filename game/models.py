@@ -1,8 +1,9 @@
-from django.db import models
+from operator import itemgetter
 
 from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 
 class Pool(models.Model):
@@ -133,6 +134,12 @@ class Team(models.Model):
         m.delete()
         return m.state
 
+    def current_fixtures(self):
+        return [league.current_fixture() for league in self.leagues.all()]
+
+    def prev_fixtures(self):
+        return [league.prev_fixture() for league in self.leagues.all()]
+
     def get_pic_url(self):
         if self.pic:
             return self.pic._get_url()
@@ -167,6 +174,25 @@ class League(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
     teams = models.ManyToManyField(Team, related_name='leagues')
 
+    def current_fixture(self):
+        now = timezone.now()
+        return self.fixtures.current().first()
+
+    def prev_fixture(self, prev=1):
+        now = timezone.now()
+        return self.fixtures.prev(prev).first()
+
+    def team_leaderboard(self, team, prev=0):
+        leaderboard = []
+        fixture = self.fixtures.prev(prev).first()
+        if not fixture:
+            return leaderboard
+        for p in team.active_players():
+            m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=p)
+            leaderboard.append({'player_id': p.id, 'played': m.played, 'score': m.score})
+        leaderboard.sort(key=itemgetter('score'), reverse=True)
+        return leaderboard
+
     def get_pic_url(self):
         if self.pic:
             return self.pic._get_url()
@@ -194,7 +220,20 @@ class Prize(models.Model):
         return str(self.name)
 
 
+class FixtureQuerySet(models.QuerySet):
+
+    def current(self):
+        now = timezone.now()
+        return self.filter(start_date__lte=now, end_date__gte=now)
+
+    def prev(self, prev=0):
+        now = timezone.now()
+        return self.filter(start_date__lte=now).order_by('-end_date')[prev:]
+
+
 class Fixture(models.Model):
+    objects = FixtureQuerySet.as_manager()
+
     league = models.ForeignKey(League, blank=True, null=True, related_name='fixtures')
     pools = models.ManyToManyField(Pool, related_name='fixtures')
     name = models.CharField(max_length=255, blank=True, null=True)

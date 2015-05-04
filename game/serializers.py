@@ -31,7 +31,22 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('username','pic',)
+        fields = ('id', 'username','pic',)
+
+
+class TeamLeagueSerializer(serializers.ModelSerializer):
+    leaderboard = serializers.SerializerMethodField()
+    prev_leaderboard = serializers.SerializerMethodField()
+
+    def get_leaderboard(self, league):
+        return league.team_leaderboard(self.context['view'].get_object())
+
+    def get_prev_leaderboard(self, league):
+        return league.team_leaderboard(self.context['view'].get_object(), prev=1)
+
+    class Meta:
+        model = League
+        fields = ('name', 'leaderboard', 'prev_leaderboard', )
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -40,9 +55,8 @@ class TeamSerializer(serializers.ModelSerializer):
     players_waiting_captain = UserSerializer(many=True, source='waiting_captain', read_only=True)
     players_pending = UserSerializer(many=True, source='waiting_players', read_only=True)
     captain = UserSerializer(read_only=True)
-    #prev_fixture
-    #current_fixture
+    leagues = TeamLeagueSerializer(many=True, read_only=True)
 
     class Meta:
         model = Team
-        fields = ('name','pic','players','players_waiting_captain','players_pending','captain')
+        fields = ('name','pic','players','players_waiting_captain','players_pending','captain', 'leagues')
