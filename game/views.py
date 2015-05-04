@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import detail_route, list_route
+from rest_framework.exceptions import ParseError
 
 from users.models import get_fb_friends
 from .models import *
@@ -31,8 +32,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         try:
             enroll = team.request_enroll(request.user)
         except Exception as e:
-            return Response({'detail': str(e)},
-                status=status.HTTP_406_NOT_ACCEPTABLE)
+            raise ParseError(detail=str(e))
         if enroll == Membership.STATE_ACTIVE:
             resp = 'Request accepted. Current state is "Active player"'
         elif enroll == Membership.STATE_WAITING_CAPTAIN:
@@ -53,8 +53,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         try:
             sign = team.sign(user)
         except Exception as e:
-            return Response({'detail': str(e)},
-                status=status.HTTP_406_NOT_ACCEPTABLE)
+            raise ParseError(detail=str(e))
         if sign == Membership.STATE_ACTIVE:
             resp = 'Request accepted. Current state is "Active player"'
         elif sign == Membership.STATE_WAITING_PLAYER:
@@ -70,8 +69,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         try:
             team.fire(user)
         except Exception as e:
-            return Response({'detail': str(e)},
-                status=status.HTTP_406_NOT_ACCEPTABLE)
+            raise ParseError(detail=str(e))
         return Response({'status': 'Player %s was fired' % user.id})
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
