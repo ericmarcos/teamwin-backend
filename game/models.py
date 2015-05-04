@@ -209,6 +209,7 @@ class Match(models.Model):
     fixture = models.ForeignKey(Fixture, blank=True, null=True, related_name='matches')
     team = models.ForeignKey(Team, blank=True, null=True, related_name='matches')
     player = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name='matches')
+    played = models.IntegerField(default=0) #Number of pools played
     score = models.IntegerField(default=0)
     did_share = models.BooleanField(default=False)
 
