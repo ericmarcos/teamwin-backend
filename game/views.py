@@ -21,7 +21,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             return self.request.user.teams.all()
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
-    def request_enroll(self):
+    def request_enroll(self, request, pk=None):
         '''
         When a player request to enter a team. If the captain of the team already
         sent him a sign request, the player becomes active right away. Else, the
@@ -42,7 +42,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         return Response({'status': resp})
 
     @detail_route(methods=['post'])
-    def sign(self):
+    def sign(self, request, pk=None):
         '''
         When the captain wants to sign a player to enter a team. If the player already
         sent him an enroll request, the player becomes active right away. Else, the request
@@ -64,7 +64,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         return Response({'status': resp})
 
     @detail_route(methods=['post'])
-    def fire(self):
+    def fire(self, request, pk=None):
         team.get_object()
         user = get_user_model().objects.get(id=request.DATA.get('user_id'))
         try:
@@ -75,7 +75,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         return Response({'status': 'Player %s was fired' % user.id})
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
-    def leave(self):
+    def leave(self, request, pk=None):
         team.get_object()
         try:
             team.fire(self.request.user)
