@@ -5,6 +5,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+from users.models import get_fb_friends
+
 
 class PoolQuerySet(models.QuerySet):
 
@@ -36,7 +38,7 @@ class PoolQuerySet(models.QuerySet):
         return self.filter(results__players=player).distinct()
 
     def pending(self, player):
-        return self.filter(fixtures__league__teams__players=player).exclude(results__players=player).distinct()
+        return self.open().filter(fixtures__league__teams__players=player).exclude(results__players=player).distinct()
 
 
 class Pool(models.Model):
@@ -130,7 +132,16 @@ class CaptainCantLeave(Exception):
         super(Exception, self).__init__('The captain can\'t leave the team')
 
 
+class TeamQuerySet(models.QuerySet):
+
+    def friends(self, user):
+        fr = get_fb_friends(user)
+        return self.filter(players=fr).exclude(players=user).distinct()
+
+
 class Team(models.Model):
+    objects = TeamQuerySet.as_manager()
+
     players = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership', related_name='teams')
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='teams', null=True, blank=True)

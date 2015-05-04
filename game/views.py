@@ -4,20 +4,22 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ParseError
 
-from users.models import get_fb_friends
 from .models import *
 from .permissions import *
 from .serializers import *
 
 
 class TeamViewSet(viewsets.ModelViewSet):
-    serializer_class = TeamSerializer
     permission_classes = [TeamPermission,]
 
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return TeamShortSerializer
+        return TeamSerializer
+
     def get_queryset(self):
-        if self.request.DATA.get('friends'):
-            friends = get_fb_friends(self.request.user)
-            return Team.objects.filter(players=friends).exclude(players=self.request.user).distinct()
+        if self.request.query_params.get('friends'):
+            return Team.objects.friends(self.request.user)
         else:
             return self.request.user.teams.all()
 
@@ -49,7 +51,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         is set to pending until the player accepts it.
         '''
         team = self.get_object()
-        user = get_user_model().objects.get(id=request.DATA.get('user_id'))
+        user = get_user_model().objects.get(id=request.data.get('user_id'))
         try:
             sign = team.sign(user)
         except Exception as e:
@@ -65,7 +67,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def fire(self, request, pk=None):
         team = self.get_object()
-        user = get_user_model().objects.get(id=request.DATA.get('user_id'))
+        user = get_user_model().objects.get(id=request.data.get('user_id'))
         try:
             team.fire(user)
         except Exception as e:
@@ -85,18 +87,21 @@ class TeamViewSet(viewsets.ModelViewSet):
 class PoolViewSet(viewsets.ModelViewSet):
     serializer_class = PoolSerializer
     permission_classes = [PoolPermission, ]
+
     
     def get_queryset(self):
-        if self.request.DATA.get('pending'):
+        if self.request.query_params.get('pending'):
             return Pool.objects.pending(self.request.user)
-        else:
+        elif self.request.query_params.get('played'):
             return Pool.objects.played(self.request.user)
+        else:
+            return Pool.objects.public()
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated,])
     def play(self, request, pk=None):
         pool = self.get_object()
         try:
-            result = request.DATA['result']
+            result = request.data['result']
             pool.play(request.user, result)
         except Exception as e:
             raise ParseError(detail=str(e))
@@ -106,7 +111,7 @@ class PoolViewSet(viewsets.ModelViewSet):
     def set(self, request, pk=None):
         pool = self.get_object()
         try:
-            result = request.DATA['result']
+            result = request.data['result']
             pool.set(result)
         except Exception as e:
             raise ParseError(detail=str(e))
