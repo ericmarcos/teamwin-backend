@@ -86,12 +86,7 @@ class Pool(models.Model):
         r = PoolResult.objects.get_or_create(pool=self, name=result)
         r.is_winner = True
         r.save()
-        for player in r.players.all():
-            for team in player.teams.all():
-                for fixture in self.fixtures.all():
-                    m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=player)
-                    m.played += 1
-                    m.save()
+        Match.objects.filter(fixture__pools=self).update(score=models.F('score') + 1)
 
     def __unicode__(self):
         return str(self.title)
