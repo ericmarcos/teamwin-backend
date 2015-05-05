@@ -244,6 +244,7 @@ class League(models.Model):
     pic = models.ImageField(upload_to='leagues', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
     teams = models.ManyToManyField(Team, blank=True, related_name='leagues')
+    visible = models.BooleanField(default=True)
 
     def current_fixture(self):
         now = timezone.now()
