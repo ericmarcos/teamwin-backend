@@ -4,6 +4,7 @@ import json
 from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.conf import settings
 #from django.test.utils import override_settings
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -65,12 +66,13 @@ class LeagueResourceTest(APITestCase):
         self.user_5.profile = DareyooUserProfile(user_id=self.user_5.id)
         self.user_5.profile.save()
 
-    def test_league_leaderboard(self):
-
+    def test_team_creation(self):
         ###### Creating team with user 1
         self.client.force_authenticate(user=self.user_1)
 
         team_count = Team.objects.count()
+        
+        ###### Creating a team
         post_data = {
             'name': 'Team1',
         }
@@ -84,5 +86,49 @@ class LeagueResourceTest(APITestCase):
         self.assertEqual(team.players.count(), 1)
         self.assertTrue(team.is_captain(self.user_1))
 
-        team.delete()
+        ###### Testing team creation limit
+        for i in xrange(settings.DAREYOO_MAX_TEAMS - 1):
+            response = self.client.post(url, post_data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Team.objects.count(), team_count + settings.DAREYOO_MAX_TEAMS)
+
+        response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        Team.objects.all().delete()
+        self.client.force_authenticate(user=None)
+
+    def test_team_participation(self):
+        t = Team.objects.create(name='t1')
+        t.set_captain(self.user_1)
+
+        ###### Joining team with user 2
+        self.client.force_authenticate(user=self.user_2)
+        url = reverse('team-request-enroll', args=(t.id,))
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.waiting_captain().count(), 1)
+
+        ###### User 1 declines request
+        self.client.force_authenticate(user=self.user_1)
+        url = reverse('team-fire', args=(t.id,))
+        response = self.client.post(url, {'user_id': self.user_2.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.waiting_captain().count(), 0)
+
+        ###### Joining team with user 2 (again)
+        self.client.force_authenticate(user=self.user_2)
+        url = reverse('team-request-enroll', args=(t.id,))
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.waiting_captain().count(), 1)
+
+        ###### User 1 accepts request
+        self.client.force_authenticate(user=self.user_1)
+        url = reverse('team-sign', args=(t.id,))
+        response = self.client.post(url, {'user_id': self.user_2.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.active_players().count(), 2)
+
+        Team.objects.all().delete()
         self.client.force_authenticate(user=None)

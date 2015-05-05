@@ -207,7 +207,7 @@ class Team(models.Model):
             m.state = m.STATE_WAITING_PLAYER
             #send request to player
         elif m.state == m.STATE_WAITING_CAPTAIN:
-            self.check_limits()
+            self.check_limits(user)
             m.state = m.STATE_ACTIVE
         else:
             return False

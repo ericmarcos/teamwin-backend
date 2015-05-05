@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ParseError
+from rest_framework.response import Response
 
 from .models import *
 from .permissions import *
@@ -14,19 +15,25 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'list':
+            print self.action
             return TeamShortSerializer
         return TeamSerializer
 
     def get_queryset(self):
+        if self.action in ['detail', 'request_enroll', 'sign']:
+            return Team.objects.all()
         if self.request.query_params.get('friends'):
             return Team.objects.friends(self.request.user)
         else:
             return self.request.user.teams.all()
 
     def perform_create(self, serializer):
-        check_user_limits(self.request.user)
-        team = serializer.save()
-        team.set_captain(self.request.user, check=False)
+        try:
+            check_user_limits(self.request.user)
+            team = serializer.save()
+            team.set_captain(self.request.user, check=False)
+        except Exception as e:
+            raise ParseError(detail=str(e))
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     def request_enroll(self, request, pk=None):
