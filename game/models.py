@@ -122,6 +122,11 @@ class PlayerBelongsToTooManyTeams(Exception):
         super(Exception, self).__init__('The user %s belongs to too many teams' % user.id)
 
 
+class TeamHasToTooManyPlayers(Exception):
+    def __init__(self, team, *args, **kwargs):
+        super(Exception, self).__init__('The team %s has too many players' % team.id)
+
+
 class CaptainCantLeave(Exception):
     def __init__(self, *args, **kwargs):
         super(Exception, self).__init__('The captain can\'t leave the team')
@@ -161,6 +166,9 @@ class Team(models.Model):
         active_teams = Membership.objects.filter(player=user, state=Membership.STATE_ACTIVE).count()
         if not user.profile.is_pro and active_teams >= settings.DAREYOO_MAX_TEAMS:
             raise PlayerBelongsToTooManyTeams(user)
+        active_players = Membership.objects.filter(team=self, state=Membership.STATE_ACTIVE).count()
+        if active_players >= settings.DAREYOO_MAX_PLAYERS:
+            raise TeamHasToTooManyPlayers(self)
 
     def request_enroll(self, user):
         self.check_user(user)
