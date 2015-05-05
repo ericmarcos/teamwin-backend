@@ -85,26 +85,9 @@ WSGI_APPLICATION = 'dareyoo2.wsgi.application'
 import dj_database_url
 
 
-class MasterSlaveRouter(object):
-    def db_for_read(self, model, **hints):
-        return 'read-only'
-
-    def db_for_write(self, model, **hints):
-        return 'default'
-
-    def allow_relation(self, obj1, obj2, **hints):
-        return True
-
-    def allow_syncdb(self, db, model):
-        return True
-
-
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL')),
-    'read-only': dj_database_url.config(default=os.environ.get('READ_ONLY_DATABASE_URL'))
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
-
-DATABASE_ROUTERS = ['dareyoo2.settings.MasterSlaveRouter',]
 
 
 # Internationalization
@@ -179,9 +162,6 @@ REST_FRAMEWORK = {
 # DAREYOO
 
 DEFAULT_PROFILE_PIC_URL = STATIC_URL + 'default_profile_pics/profile_%s.png'
-
-def get_default_profile_pic(user_id):
-    return DEFAULT_PROFILE_PIC_URL % ((user_id or 1) % 10)
 
 DAREYOO_MAX_PLAYERS = 11 # Max players per team
 DAREYOO_MAX_TEAMS = 5 # Max teams per player
