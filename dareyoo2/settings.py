@@ -183,5 +183,6 @@ DEFAULT_PROFILE_PIC_URL = STATIC_URL + 'default_profile_pics/profile_%s.png'
 def get_default_profile_pic(user_id):
     return DEFAULT_PROFILE_PIC_URL % ((user_id or 1) % 10)
 
-DAREYOO_MAX_TEAMS = 5
-DAREYOO_MAX_PLAYERS = 11
+DAREYOO_MAX_PLAYERS = 11 # Max players per team
+DAREYOO_MAX_TEAMS = 5 # Max teams per player
+DAREYOO_MAX_LEAGUES = 3 # Max leagues per team

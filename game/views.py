@@ -116,3 +116,32 @@ class PoolViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ParseError(detail=str(e))
         return Response({'status': 'Result %s set for pool %s' % (result, pool)})
+
+
+class LeagueViewSet(viewsets.ModelViewSet):
+    serializer_class = LeagueSerializer
+    permission_classes = [LeaguePermission, ]
+
+    
+    def get_queryset(self):
+        return League.objects.visible()
+
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated,])
+    def enroll(self, request, pk=None):
+        league = self.get_object()
+        try:
+            team_id = request.data['team_id']
+            league.enroll(request.user, team_id)
+        except Exception as e:
+            raise ParseError(detail=str(e))
+        return Response({'status': 'Team %s was successfully enrolled to %s' % (team_id, league)})
+
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated,])
+    def leave(self, request, pk=None):
+        league = self.get_object()
+        try:
+            team_id = request.data['team_id']
+            league.leave(request.user, team_id)
+        except Exception as e:
+            raise ParseError(detail=str(e))
+        return Response({'status': 'Team %s left the league %s' % (team_id, league)})

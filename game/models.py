@@ -238,7 +238,25 @@ class Membership(models.Model):
     state = models.CharField(max_length=64, blank=True, null=True, choices=STATE_CHOICES, default=STATE_ACTIVE)
 
 
+class LeagueQuerySet(models.QuerySet):
+
+    def visible(self):
+        return self.filter(visible=True)
+
+
+class NotCaptain(Exception):
+    def __init__(self, *args, **kwargs):
+        super(Exception, self).__init__('Only the captain of the team can do this')
+
+
+class TooManyLeagues(Exception):
+    def __init__(self, team, *args, **kwargs):
+        super(Exception, self).__init__('The team %s is enrolled in too many leagues' % team.id)
+
+
 class League(models.Model):
+    objects = LeagueQuerySet.as_manager()
+
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='leagues', null=True, blank=True)
@@ -264,6 +282,30 @@ class League(models.Model):
             leaderboard.append({'player_id': p.id, 'played': m.played, 'score': m.score})
         leaderboard.sort(key=itemgetter('score'), reverse=True)
         return leaderboard
+
+    def leaderboard(self, prev=0):
+        leaderboard = []
+        fixture = self.fixtures.prev(prev).first()
+        if not fixture:
+            return leaderboard
+        return Team.objects.filter(matches__fixture=fixture).annotate(points=models.Sum(
+            models.Case(models.When(matches__fixture=fixture, then=models.F('matches__score')),
+            output_field=models.IntegerField())
+        )).order_by('-points')
+
+    def enroll(self, user, team_id):
+        t = Team.objects.get(id=team_id)
+        if not t.is_captain(user):
+            raise NotCaptain
+        if t.leagues.count() >= settings.DAREYOO_MAX_LEAGUES:
+            raise TooManyLeagues(t)
+        self.teams.add(t)
+
+    def leave(self, user, team_id):
+        t = Team.objects.get(id=team_id)
+        if not t.is_captain(user):
+            raise NotCaptain
+        self.teams.remove(t)
 
     def get_pic_url(self):
         if self.pic:

@@ -69,3 +69,25 @@ class TeamSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Team
         fields = ('url', 'id', 'name','pic','players','players_waiting_captain','players_pending','captain', 'leagues')
+
+
+class TeamRankingSerializer(serializers.HyperlinkedModelSerializer):
+    pic = serializers.ReadOnlyField(source='get_pic_url')
+    captain = UserSerializer(read_only=True)
+    points = serializers.SerializerMethodField()
+
+    def get_points(self, team):
+        return team.points
+
+    class Meta:
+        model = Team
+        fields = ('url', 'id', 'name','pic','captain', 'points')
+
+
+class LeagueSerializer(serializers.HyperlinkedModelSerializer):
+    pic = serializers.ReadOnlyField(source='get_pic_url')
+    leaderboard = TeamRankingSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = League
+        fields = ('url', 'id', 'name','pic','description','leaderboard',)
