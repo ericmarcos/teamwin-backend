@@ -65,7 +65,7 @@ class Pool(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name='pools_created')
     publishing_date = models.DateTimeField(blank=True, null=True)
     closing_date = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
     publicated_at = models.DateTimeField(blank=True, null=True, editable=False)
     closed_at = models.DateTimeField(blank=True, null=True, editable=False)
     resolved_at = models.DateTimeField(blank=True, null=True, editable=False)
