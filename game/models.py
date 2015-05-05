@@ -110,7 +110,7 @@ class PoolOption(models.Model):
 class PoolResult(models.Model):
     pool = models.ForeignKey(Pool, blank=True, null=True, related_name='results')
     name = models.CharField(max_length=255, blank=True, null=True)
-    players = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='results')
+    players = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='results')
     is_winner = models.BooleanField(default=False)
 
     def __unicode__(self):
@@ -137,7 +137,7 @@ class TeamQuerySet(models.QuerySet):
 class Team(models.Model):
     objects = TeamQuerySet.as_manager()
 
-    players = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership', related_name='teams')
+    players = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, through='Membership', related_name='teams')
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='teams', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
@@ -235,7 +235,7 @@ class League(models.Model):
     description = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='leagues', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
-    teams = models.ManyToManyField(Team, related_name='leagues')
+    teams = models.ManyToManyField(Team, blank=True, related_name='leagues')
 
     def current_fixture(self):
         now = timezone.now()
@@ -298,7 +298,7 @@ class Fixture(models.Model):
     objects = FixtureQuerySet.as_manager()
 
     league = models.ForeignKey(League, blank=True, null=True, related_name='fixtures')
-    pools = models.ManyToManyField(Pool, related_name='fixtures')
+    pools = models.ManyToManyField(Pool, blank=True, related_name='fixtures')
     name = models.CharField(max_length=255, blank=True, null=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
