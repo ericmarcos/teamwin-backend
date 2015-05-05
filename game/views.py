@@ -23,6 +23,11 @@ class TeamViewSet(viewsets.ModelViewSet):
         else:
             return self.request.user.teams.all()
 
+    def perform_create(self, serializer):
+        check_user_limits(self.request.user)
+        team = serializer.save()
+        team.set_captain(self.request.user, check=False)
+
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     def request_enroll(self, request, pk=None):
         '''

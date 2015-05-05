@@ -8,6 +8,37 @@ from django.utils import timezone
 from users.models import get_fb_friends
 
 
+class PlayerBelongsToTooManyTeams(Exception):
+    def __init__(self, user, *args, **kwargs):
+        super(Exception, self).__init__('The user %s belongs to too many teams' % user.id)
+
+
+class TeamHasToTooManyPlayers(Exception):
+    def __init__(self, team, *args, **kwargs):
+        super(Exception, self).__init__('The team %s has too many players' % team.id)
+
+
+class CaptainCantLeave(Exception):
+    def __init__(self, *args, **kwargs):
+        super(Exception, self).__init__('The captain can\'t leave the team')
+
+
+class NotCaptain(Exception):
+    def __init__(self, *args, **kwargs):
+        super(Exception, self).__init__('Only the captain of the team can do this')
+
+
+class TooManyLeagues(Exception):
+    def __init__(self, team, *args, **kwargs):
+        super(Exception, self).__init__('The team %s is enrolled in too many leagues' % team.id)
+
+
+def check_user_limits(user):
+    active_teams = Membership.objects.filter(player=user, state=Membership.STATE_ACTIVE).count()
+    if not user.profile.is_pro and active_teams >= settings.DAREYOO_MAX_TEAMS:
+        raise PlayerBelongsToTooManyTeams(user)
+
+
 class PoolQuerySet(models.QuerySet):
 
     def state(self, state):
@@ -117,21 +148,6 @@ class PoolResult(models.Model):
         return str(self.name)
 
 
-class PlayerBelongsToTooManyTeams(Exception):
-    def __init__(self, user, *args, **kwargs):
-        super(Exception, self).__init__('The user %s belongs to too many teams' % user.id)
-
-
-class TeamHasToTooManyPlayers(Exception):
-    def __init__(self, team, *args, **kwargs):
-        super(Exception, self).__init__('The team %s has too many players' % team.id)
-
-
-class CaptainCantLeave(Exception):
-    def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__('The captain can\'t leave the team')
-
-
 class TeamQuerySet(models.QuerySet):
 
     def friends(self, user):
@@ -146,6 +162,11 @@ class Team(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='teams', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
+
+    def set_captain(self, user, check=True):
+        if check:
+            self.check_limits(user)
+        Membership.objects.create(team=self, player=user, is_captain=True)
 
     def captain(self):
         return self.players.filter(membership__is_captain=True).first()
@@ -162,16 +183,13 @@ class Team(models.Model):
     def waiting_players(self):
         return self.players.filter(membership__state=Membership.STATE_WAITING_PLAYER)
 
-    def check_user(self, user):
-        active_teams = Membership.objects.filter(player=user, state=Membership.STATE_ACTIVE).count()
-        if not user.profile.is_pro and active_teams >= settings.DAREYOO_MAX_TEAMS:
-            raise PlayerBelongsToTooManyTeams(user)
-        active_players = Membership.objects.filter(team=self, state=Membership.STATE_ACTIVE).count()
-        if active_players >= settings.DAREYOO_MAX_PLAYERS:
+    def check_limits(self, user):
+        check_user_limits(user)
+        if self.active_players().count() >= settings.DAREYOO_MAX_PLAYERS:
             raise TeamHasToTooManyPlayers(self)
 
     def request_enroll(self, user):
-        self.check_user(user)
+        self.check_limits(user)
         m, created = Membership.objects.get_or_create(team=self, player=user)
         if created:
             m.state = m.STATE_WAITING_CAPTAIN
@@ -189,7 +207,7 @@ class Team(models.Model):
             m.state = m.STATE_WAITING_PLAYER
             #send request to player
         elif m.state == m.STATE_WAITING_CAPTAIN:
-            self.check_user()
+            self.check_limits()
             m.state = m.STATE_ACTIVE
         else:
             return False
@@ -242,16 +260,6 @@ class LeagueQuerySet(models.QuerySet):
 
     def visible(self):
         return self.filter(visible=True)
-
-
-class NotCaptain(Exception):
-    def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__('Only the captain of the team can do this')
-
-
-class TooManyLeagues(Exception):
-    def __init__(self, team, *args, **kwargs):
-        super(Exception, self).__init__('The team %s is enrolled in too many leagues' % team.id)
 
 
 class League(models.Model):
