@@ -225,3 +225,85 @@ class LeagueResourceTest(APITestCase):
         response = self.client.post(url, {'team_id': t.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(l.teams.count(), 0)
+
+    def test_pool_participation(self):
+        l = League.objects.create(name='l1')
+
+        t = Team.objects.create(name='t1')
+        t.set_captain(self.user_1)
+        Membership.objects.create(team=t, player=self.user_2)
+
+        self.user_5.is_staff = True
+        self.user_5.save()
+
+        p = Pool.objects.create()
+
+        ###### Shouldn't be able to play when the pool is in draft
+        url = reverse('pool-play', args=(p.id,))
+        self.client.force_authenticate(user=self.user_1)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(p.players().count(), 0)
+        # Neither set the bet
+        url = reverse('pool-set', args=(p.id,))
+        self.client.force_authenticate(user=self.user_1)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        p.publish()
+
+        ###### Now the bet is open, should be able to play
+        url = reverse('pool-play', args=(p.id,))
+        self.client.force_authenticate(user=self.user_1)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(p.players().count(), 1)
+        # Playing twice should have no effect
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(p.players().count(), 1)
+        # Playing with another user for same result
+        self.client.force_authenticate(user=self.user_2)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(p.players().count(), 2)
+        self.assertEqual(p.results.count(), 1)
+        # Playing with another user for another result
+        self.client.force_authenticate(user=self.user_3)
+        response = self.client.post(url, {'result': 'X'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(p.players().count(), 3)
+        self.assertEqual(p.results.count(), 2)
+        
+        # User 1 shouldn't be able to set the bet
+        url = reverse('pool-set', args=(p.id,))
+        self.client.force_authenticate(user=self.user_1)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # But user 5 (staff) should have no problem
+        self.client.force_authenticate(user=self.user_5)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(p.winners().count(), 2)
+        # Can't set it again
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Now that it's closed, shouldn't be able to play again
+        url = reverse('pool-play', args=(p.id,))
+        self.client.force_authenticate(user=self.user_4)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(p.players().count(), 3)
+
+        ###### Same flow but with closing step
+        p.delete()
+        p = Pool.objects.create()
+        self.client.force_authenticate(user=self.user_1)
+        p.publish()
+        url = reverse('pool-play', args=(p.id,))
+        self.client.post(url, {'result': '1'})
+        p.close()
+        # Shouldn't be able to play
+        self.client.force_authenticate(user=self.user_2)
+        response = self.client.post(url, {'result': '1'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

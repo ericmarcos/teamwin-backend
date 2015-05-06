@@ -33,6 +33,21 @@ class TooManyLeagues(Exception):
         super(Exception, self).__init__('The team %s is enrolled in too many leagues' % team.id)
 
 
+class InvalidPoolTransition(Exception):
+    def __init__(self, state1, state2, *args, **kwargs):
+        super(Exception, self).__init__('Invalid pool transition from state %s to state %s' % (state1, state2))
+
+
+class CantPlayPool(Exception):
+    def __init__(self, pool, *args, **kwargs):
+        super(Exception, self).__init__('Can\'t play pool %s (state %s)' % (pool.id, pool.state))
+
+
+class InvalidPoolResult(Exception):
+    def __init__(self, result, *args, **kwargs):
+        super(Exception, self).__init__('Invalid pool result %s' % result)
+
+
 def check_user_limits(user):
     active_teams = Membership.objects.filter(player=user, state=Membership.STATE_ACTIVE).count()
     if not user.profile.is_pro and active_teams >= settings.DAREYOO_MAX_TEAMS:
@@ -104,20 +119,58 @@ class Pool(models.Model):
     pool_type = models.CharField(max_length=64, blank=True, null=True, choices=TYPE_CHOICES, default=TYPE_QUINIELA)
     public = models.BooleanField(default=True)
 
+    def publish(self):
+        if self.state == self.STATE_DRAFT:
+            self.state = self.STATE_OPEN
+            self.publicated_at = timezone.now()
+            self.save()
+        else:
+            raise InvalidPoolTransition(self.state, self.STATE_OPEN)
+
     def play(self, player, result):
-        r = PoolResult.objects.get_or_create(pool=self, name=result)
-        r.players.add(player)
-        for team in player.teams.all():
-            for fixture in self.fixtures.all():
-                m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=player)
-                m.played += 1
-                m.save()
+        if self.state == self.STATE_OPEN:
+            if not result:
+                raise InvalidPoolResult(result)
+            r, created = PoolResult.objects.get_or_create(pool=self, name=result)
+            r.players.add(player)
+            for team in player.teams.all():
+                for fixture in self.fixtures.all():
+                    m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=player)
+                    m.played += 1
+                    m.save()
+        else:
+            raise CantPlayPool(self)
+
+    def close(self):
+        if self.state == self.STATE_OPEN:
+            self.state = self.STATE_CLOSED
+            self.closed_at = timezone.now()
+            self.save()
+        else:
+            raise InvalidPoolTransition(self.state, self.STATE_CLOSED)
 
     def set(self, result):
-        r = PoolResult.objects.get_or_create(pool=self, name=result)
-        r.is_winner = True
-        r.save()
-        Match.objects.filter(fixture__pools=self).update(score=models.F('score') + 1)
+        if self.state == self.STATE_OPEN or self.state == self.STATE_CLOSED:
+            if not result:
+                raise InvalidPoolResult(result)
+            r, created = PoolResult.objects.get_or_create(pool=self, name=result)
+            r.is_winner = True
+            r.save()
+            if self.state == self.STATE_OPEN:
+                self.closed_at = timezone.now()
+            self.state = self.STATE_SET
+            self.resolved_at = timezone.now()
+            self.save()
+            Match.objects.filter(fixture__pools=self).update(score=models.F('score') + 1)
+        else:
+            raise InvalidPoolTransition(self.state, self.STATE_SET)
+
+    def players(self):
+        return get_user_model().objects.filter(results__pool=self)
+
+    def winners(self):
+        pr = PoolResult.objects.filter(is_winner=True).first()
+        return pr.players.all()
 
     def __unicode__(self):
         return str(self.title)
