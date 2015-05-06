@@ -31,40 +31,17 @@ class LeagueResourceTest(APITestCase):
 
         #celery.send_task = Mock()
 
-        self.username_1 = 'test_user_1'
-        self.email_1 = 'test_user_1@dareyoo.net'
-        self.password_1 = 'pass'
-        self.user_1 = get_user_model().objects.create_user(self.username_1, self.email_1, self.password_1)
-        self.user_1.profile = DareyooUserProfile(user_id=self.user_1.id)
-        self.user_1.profile.save()
+        self.user_1 = self.create_user('test_user_1')
+        self.user_2 = self.create_user('test_user_2')
+        self.user_3 = self.create_user('test_user_3')
+        self.user_4 = self.create_user('test_user_4')
+        self.user_5 = self.create_user('test_user_5')
 
-        self.username_2 = 'test_user_2'
-        self.email_2 = 'test_user_2@dareyoo.net'
-        self.password_2 = 'pass'
-        self.user_2 = get_user_model().objects.create_user(self.username_2, self.email_2, self.password_2)
-        self.user_2.profile = DareyooUserProfile(user_id=self.user_2.id)
-        self.user_2.profile.save()
-
-        self.username_3 = 'test_user_3'
-        self.email_3 = 'test_user_3@dareyoo.net'
-        self.password_3 = 'pass'
-        self.user_3 = get_user_model().objects.create_user(self.username_3, self.email_3, self.password_3)
-        self.user_3.profile = DareyooUserProfile(user_id=self.user_3.id)
-        self.user_3.profile.save()
-
-        self.username_4 = 'test_user_4'
-        self.email_4 = 'test_user_4@dareyoo.net'
-        self.password_4 = 'pass'
-        self.user_4 = get_user_model().objects.create_user(self.username_4, self.email_4, self.password_4)
-        self.user_4.profile = DareyooUserProfile(user_id=self.user_4.id)
-        self.user_4.profile.save()
-
-        self.username_5 = 'test_user_5'
-        self.email_5 = 'test_user_5@dareyoo.net'
-        self.password_5 = 'pass'
-        self.user_5 = get_user_model().objects.create_user(self.username_5, self.email_5, self.password_5)
-        self.user_5.profile = DareyooUserProfile(user_id=self.user_5.id)
-        self.user_5.profile.save()
+    def create_user(self, username):
+        user = get_user_model().objects.create_user(username, '%s@dy.com' % username, '1234')
+        user.profile = DareyooUserProfile(user_id=user.id)
+        user.profile.save()
+        return user
 
     def test_team_creation(self):
         ###### Creating team with user 1
@@ -130,5 +107,121 @@ class LeagueResourceTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(t.active_players().count(), 2)
 
+        ###### User 1 fires user 2
+        self.client.force_authenticate(user=self.user_1)
+        url = reverse('team-fire', args=(t.id,))
+        response = self.client.post(url, {'user_id': self.user_2.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.active_players().count(), 1)
+
+        ###### User 1 signs user 2
+        self.client.force_authenticate(user=self.user_1)
+        url = reverse('team-sign', args=(t.id,))
+        response = self.client.post(url, {'user_id': self.user_2.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.waiting_players().count(), 1)
+
+        ###### User 2 accepts request
+        self.client.force_authenticate(user=self.user_2)
+        url = reverse('team-request-enroll', args=(t.id,))
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.active_players().count(), 2)
+
+        ###### User 2 leaves team
+        self.client.force_authenticate(user=self.user_2)
+        url = reverse('team-leave', args=(t.id,))
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.active_players().count(), 1)
+
+        ###### Testing players limit
+
+        #Team should be able to get "infinite" requests
+        url = reverse('team-request-enroll', args=(t.id,))
+        for i in xrange(settings.DAREYOO_MAX_PLAYERS * 2):
+            player = self.create_user('player%s' % i)
+            self.client.force_authenticate(user=player)
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.waiting_captain().count(), settings.DAREYOO_MAX_PLAYERS * 2)
+        self.assertEqual(t.active_players().count(), 1)
+
+        #But should only be able to accept DAREYOO_MAX_PLAYERS requests
+        self.client.force_authenticate(user=self.user_1)
+        url = reverse('team-sign', args=(t.id,))
+        for i, player in enumerate(t.waiting_captain()):
+            response = self.client.post(url, {'user_id': player.id})
+            if i < settings.DAREYOO_MAX_PLAYERS - 1:
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(t.active_players().count(), 2 + i)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertEqual(t.active_players().count(), settings.DAREYOO_MAX_PLAYERS)
+
+        Membership.objects.filter(team=t, is_captain=False).delete()
+
+        #Captain should be able to sign "infinite" players
+        url = reverse('team-sign', args=(t.id,))
+        self.client.force_authenticate(user=self.user_1)
+        for i in xrange(settings.DAREYOO_MAX_PLAYERS * 2):
+            response = self.client.post(url, {'user_id': get_user_model().objects.get(username='player%s' % i).id})
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(t.waiting_players().count(), settings.DAREYOO_MAX_PLAYERS * 2)
+        self.assertEqual(t.active_players().count(), 1)
+
+        #But only DAREYOO_MAX_PLAYERS should be able to accept the request
+        url = reverse('team-request-enroll', args=(t.id,))
+        for i, player in enumerate(t.waiting_captain()):
+            self.client.force_authenticate(user=player)
+            response = self.client.post(url)
+            if i < settings.DAREYOO_MAX_PLAYERS - 1:
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(t.active_players().count(), 2 + i)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertEqual(t.active_players().count(), settings.DAREYOO_MAX_PLAYERS)
+
+        get_user_model().objects.filter(username__contains='player').delete()
+
         Team.objects.all().delete()
         self.client.force_authenticate(user=None)
+
+    def test_league_participation(self):
+        l = League.objects.create(name='l1')
+
+        t = Team.objects.create(name='t1')
+        t.set_captain(self.user_1)
+        Membership.objects.create(team=t, player=self.user_2)
+
+        ###### Shouldn't be able to join the lague with user 3 nor user 2
+        self.client.force_authenticate(user=self.user_3)
+        url = reverse('league-enroll', args=(l.id,))
+        response = self.client.post(url, {'team_id': t.id})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(l.teams.count(), 0)
+        self.client.force_authenticate(user=self.user_2)
+        response = self.client.post(url, {'team_id': t.id})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(l.teams.count(), 0)
+        # But should be able to join with user 1 (captain)
+        self.client.force_authenticate(user=self.user_1)
+        response = self.client.post(url, {'team_id': t.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(l.teams.count(), 1)
+
+        ###### Shouldn't be able to leave the lague with user 3 nor user 2
+        self.client.force_authenticate(user=self.user_3)
+        url = reverse('league-leave', args=(l.id,))
+        response = self.client.post(url, {'team_id': t.id})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(l.teams.count(), 1)
+        self.client.force_authenticate(user=self.user_2)
+        response = self.client.post(url, {'team_id': t.id})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(l.teams.count(), 1)
+        # But should be able to leave with user 1 (captain)
+        self.client.force_authenticate(user=self.user_1)
+        response = self.client.post(url, {'team_id': t.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(l.teams.count(), 0)
