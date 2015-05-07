@@ -161,7 +161,7 @@ class Pool(models.Model):
             self.state = self.STATE_SET
             self.resolved_at = timezone.now()
             self.save()
-            Match.objects.filter(fixture__pools=self).update(score=models.F('score') + 1)
+            Match.objects.filter(fixture__pools=self, player__results=r).update(score=models.F('score') + 1)
         else:
             raise InvalidPoolTransition(self.state, self.STATE_SET)
 
@@ -169,8 +169,13 @@ class Pool(models.Model):
         return get_user_model().objects.filter(results__pool=self)
 
     def winners(self):
-        pr = PoolResult.objects.filter(is_winner=True).first()
-        return pr.players.all()
+        pr = self.winner_result()
+        if pr:
+            return pr.players.all()
+        return []
+
+    def winner_result(self):
+        return PoolResult.objects.filter(is_winner=True).first()
 
     def __unicode__(self):
         return str(self.title)
@@ -338,11 +343,11 @@ class League(models.Model):
         fixture = self.fixtures.prev(prev).first()
         if not fixture:
             return leaderboard
-        for p in team.active_players():
-            m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=p)
-            leaderboard.append({'player_id': p.id, 'played': m.played, 'score': m.score})
-        leaderboard.sort(key=itemgetter('score'), reverse=True)
-        return leaderboard
+        return get_user_model().objects.filter(matches__fixture=fixture, teams=team).annotate(points=models.Sum(
+            models.Case(models.When(matches__fixture=fixture, matches__team=team, then=models.F('matches__score')),
+            output_field=models.IntegerField()))).annotate(played=models.Sum(
+            models.Case(models.When(matches__fixture=fixture, matches__team=team, then=models.F('matches__played')),
+            output_field=models.IntegerField()))).order_by('-points')
 
     def leaderboard(self, prev=0):
         leaderboard = []

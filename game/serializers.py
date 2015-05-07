@@ -33,15 +33,30 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username','pic',)
 
 
+class TeamLeaderboardSerializer(serializers.ModelSerializer):
+    pic = serializers.SerializerMethodField('get_profile_pic')
+    points = serializers.IntegerField()
+    played = serializers.IntegerField()
+
+    def get_profile_pic(self, obj):
+        return obj.profile.get_profile_pic_url()
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'username','pic', 'points', 'played')
+
+
 class TeamLeagueSerializer(serializers.ModelSerializer):
     leaderboard = serializers.SerializerMethodField()
     prev_leaderboard = serializers.SerializerMethodField()
 
     def get_leaderboard(self, league):
-        return league.team_leaderboard(self.context['view'].get_object())
+        leaderboard = league.team_leaderboard(self.context['view'].get_object())
+        return TeamLeaderboardSerializer(leaderboard, many=True).data
 
     def get_prev_leaderboard(self, league):
-        return league.team_leaderboard(self.context['view'].get_object(), prev=1)
+        leaderboard = league.team_leaderboard(self.context['view'].get_object(), prev=1)
+        return TeamLeaderboardSerializer(leaderboard, many=True).data
 
     class Meta:
         model = League
@@ -71,13 +86,10 @@ class TeamSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'id', 'name','pic','players','players_waiting_captain','players_pending','captain', 'leagues')
 
 
-class TeamRankingSerializer(serializers.HyperlinkedModelSerializer):
+class LeagueLeaderboardSerializer(serializers.HyperlinkedModelSerializer):
     pic = serializers.ReadOnlyField(source='get_pic_url')
     captain = UserSerializer(read_only=True)
-    points = serializers.SerializerMethodField()
-
-    def get_points(self, team):
-        return team.points
+    points = serializers.IntegerField()
 
     class Meta:
         model = Team
@@ -86,7 +98,7 @@ class TeamRankingSerializer(serializers.HyperlinkedModelSerializer):
 
 class LeagueSerializer(serializers.HyperlinkedModelSerializer):
     pic = serializers.ReadOnlyField(source='get_pic_url')
-    leaderboard = TeamRankingSerializer(many=True, read_only=True)
+    leaderboard = LeagueLeaderboardSerializer(many=True, read_only=True)
 
     class Meta:
         model = League
