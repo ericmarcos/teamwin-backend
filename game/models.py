@@ -2,6 +2,7 @@ from operator import itemgetter
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum, Q, F, When, Case
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -161,7 +162,7 @@ class Pool(models.Model):
             self.state = self.STATE_SET
             self.resolved_at = timezone.now()
             self.save()
-            Match.objects.filter(fixture__pools=self, player__results=r).update(score=models.F('score') + 1)
+            Match.objects.filter(fixture__pools=self, player__results=r).update(score=F('score') + 1)
         else:
             raise InvalidPoolTransition(self.state, self.STATE_SET)
 
@@ -343,21 +344,23 @@ class League(models.Model):
         fixture = self.fixtures.prev(prev).first()
         if not fixture:
             return leaderboard
-        return get_user_model().objects.filter(matches__fixture=fixture, teams=team).annotate(points=models.Sum(
-            models.Case(models.When(matches__fixture=fixture, matches__team=team, then=models.F('matches__score')),
-            output_field=models.IntegerField()))).annotate(played=models.Sum(
-            models.Case(models.When(matches__fixture=fixture, matches__team=team, then=models.F('matches__played')),
-            output_field=models.IntegerField()))).order_by('-points')
+        return get_user_model().objects.filter(matches__fixture=fixture, teams=team).\
+            annotate(points=Sum(Case(When(matches__fixture=fixture, matches__team=team, then=F('matches__score'))))).\
+            annotate(played=Sum(Case(When(matches__fixture=fixture, matches__team=team, then=F('matches__played'))))).\
+            order_by('-points')
 
-    def leaderboard(self, prev=0):
+    def leaderboard(self, prev=0, user=None):
         leaderboard = []
         fixture = self.fixtures.prev(prev).first()
         if not fixture:
             return leaderboard
-        return Team.objects.filter(matches__fixture=fixture).annotate(points=models.Sum(
-            models.Case(models.When(matches__fixture=fixture, then=models.F('matches__score')),
-            output_field=models.IntegerField())
-        )).order_by('-points')
+        all_teams = Team.objects.filter(matches__fixture=fixture)
+        user_teams = all_teams.filter(players=user) if user else Team.objects.none()
+        all_teams = all_teams.annotate(points=Sum(Case(When(matches__fixture=fixture, then=F('matches__score')))))
+        user_teams = user_teams.annotate(points=Sum(Case(When(matches__fixture=fixture, then=F('matches__score')))))
+        leaderboard = list(all_teams.order_by('-points')[:10])
+        leaderboard.extend([team for team in user_teams if team not in leaderboard])
+        return leaderboard
 
     def enroll(self, user, team_id):
         t = Team.objects.get(id=team_id)
