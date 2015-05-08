@@ -96,10 +96,18 @@ class LeagueLeaderboardSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'id', 'name','pic','captain', 'points')
 
 
+class PrizeSerializer(serializers.HyperlinkedModelSerializer):
+    pic = serializers.ReadOnlyField(source='get_pic_url')
+
+    class Meta:
+        model = Prize
+        fields = ('name', 'description', 'pic')
+
 class LeagueSerializer(serializers.HyperlinkedModelSerializer):
     pic = serializers.ReadOnlyField(source='get_pic_url')
     leaderboard = LeagueLeaderboardSerializer(many=True, read_only=True)
+    prizes = PrizeSerializer(many=True, read_only=True)
 
     class Meta:
         model = League
-        fields = ('url', 'id', 'name','pic','description','leaderboard',)
+        fields = ('url', 'id', 'name','pic','description','leaderboard', 'prizes',)
