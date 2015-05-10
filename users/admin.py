@@ -8,9 +8,11 @@ admin.site.unregister(User)
 class DareyooUserProfileInline(admin.StackedInline):
     model = DareyooUserProfile
     fk_name = 'user'
+    extra = 0
 
 class DeviceInline(admin.StackedInline):
     model = Device
+    extra = 0
 
 class UserProfileAdmin(UserAdmin):
     inlines = [DareyooUserProfileInline, DeviceInline, ]
