@@ -23,10 +23,10 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    pic = serializers.SerializerMethodField('get_profile_pic')
+    pic = serializers.SerializerMethodField()
 
-    def get_profile_pic(self, obj):
-        return obj.profile.get_profile_pic_url()
+    def get_pic(self, user):
+        return user.profile.get_profile_pic_url()
 
     class Meta:
         model = get_user_model()
@@ -34,12 +34,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class TeamLeaderboardSerializer(serializers.ModelSerializer):
-    pic = serializers.SerializerMethodField('get_profile_pic')
+    pic = serializers.SerializerMethodField()
     points = serializers.IntegerField()
     played = serializers.IntegerField()
 
-    def get_profile_pic(self, obj):
-        return obj.profile.get_profile_pic_url()
+    def get_pic(self, user):
+        return user.profile.get_profile_pic_url()
 
     class Meta:
         model = get_user_model()

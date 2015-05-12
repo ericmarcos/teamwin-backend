@@ -2,7 +2,7 @@ from operator import itemgetter
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Sum, Q, F, When, Case
+from django.db.models import Sum, Count, Q, F, When, Case, Value, Prefetch
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -53,6 +53,17 @@ def check_user_limits(user):
     active_teams = Membership.objects.filter(player=user, state=Membership.STATE_ACTIVE).count()
     if not user.profile.is_pro and active_teams >= settings.DAREYOO_MAX_TEAMS:
         raise PlayerBelongsToTooManyTeams(user)
+
+### This function will be stuffed into the default user model in apps.py
+def get_user_points(user):
+    if hasattr(user, 'match') and len(user.match) > 0:
+        return user.match[0].score
+    return 0
+
+def get_user_played(user):
+    if hasattr(user, 'match') and len(user.match) > 0:
+        return user.match[0].played
+    return 0
 
 
 class PoolQuerySet(models.QuerySet):
@@ -181,6 +192,9 @@ class Pool(models.Model):
     def __unicode__(self):
         return str(self.title)
 
+    class Meta:
+        app_label = 'game'
+
 
 class PoolOption(models.Model):
     pool = models.ForeignKey(Pool, blank=True, null=True, related_name='options')
@@ -196,6 +210,9 @@ class PoolOption(models.Model):
     def __unicode__(self):
         return str(self.name)
 
+    class Meta:
+        app_label = 'game'
+
 
 class PoolResult(models.Model):
     pool = models.ForeignKey(Pool, blank=True, null=True, related_name='results')
@@ -205,6 +222,9 @@ class PoolResult(models.Model):
 
     def __unicode__(self):
         return str(self.name)
+
+    class Meta:
+        app_label = 'game'
 
 
 class TeamQuerySet(models.QuerySet):
@@ -246,6 +266,12 @@ class Team(models.Model):
         check_user_limits(user)
         if self.active_players().count() >= settings.DAREYOO_MAX_PLAYERS:
             raise TeamHasToTooManyPlayers(self)
+
+    @property
+    def points(self):
+        if hasattr(self, 'sum_points'):
+            return self.sum_points
+        return 0
 
     def request_enroll(self, user):
         self.check_limits(user)
@@ -297,6 +323,9 @@ class Team(models.Model):
     def __unicode__(self):
         return str(self.name)
 
+    class Meta:
+        app_label = 'game'
+
 
 class Membership(models.Model):
     STATE_WAITING_CAPTAIN = 'state_waiting_captain'
@@ -313,6 +342,9 @@ class Membership(models.Model):
     date_joined = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
     is_captain = models.BooleanField(default=False)
     state = models.CharField(max_length=64, blank=True, null=True, choices=STATE_CHOICES, default=STATE_ACTIVE)
+
+    class Meta:
+        app_label = 'game'
 
 
 class LeagueQuerySet(models.QuerySet):
@@ -340,25 +372,33 @@ class League(models.Model):
         return self.fixtures.prev(prev).first()
 
     def team_leaderboard(self, team, prev=0):
-        leaderboard = []
         fixture = self.fixtures.prev(prev).first()
         if not fixture:
-            return leaderboard
-        return get_user_model().objects.filter(matches__fixture=fixture, teams=team).\
-            annotate(points=Sum(Case(When(matches__fixture=fixture, matches__team=team, then=F('matches__score'))))).\
-            annotate(played=Sum(Case(When(matches__fixture=fixture, matches__team=team, then=F('matches__played'))))).\
-            order_by('-points')
+            return []
+        subq = Match.objects.filter(fixture=fixture, team=team)
+        leaderboard = get_user_model().objects.filter(matches=subq).\
+            prefetch_related('profile', Prefetch('matches', queryset=subq, to_attr='match'))
+        return sorted(leaderboard, key=lambda x: x.points, reverse=True)
 
     def leaderboard(self, prev=0, user=None):
+        '''
+        If user is passed, the returned result will merge the teams of that user to the leaderboard
+        with the score of the corresponding fixture
+        '''
         leaderboard = []
         fixture = self.fixtures.prev(prev).first()
         if not fixture:
             return leaderboard
         all_teams = Team.objects.filter(matches__fixture=fixture)
+        if not prev:
+            all_teams = self.teams.all()
         user_teams = all_teams.filter(players=user) if user else Team.objects.none()
-        all_teams = all_teams.annotate(points=Sum(Case(When(matches__fixture=fixture, then=F('matches__score')))))
-        user_teams = user_teams.annotate(points=Sum(Case(When(matches__fixture=fixture, then=F('matches__score')))))
-        leaderboard = list(all_teams.order_by('-points')[:10])
+        all_teams = all_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
+        user_teams_points = user_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
+        leaderboard = list(all_teams.order_by('-sum_points')[:10])
+        #adding user teams that are not in the top 10
+        leaderboard.extend([team for team in user_teams_points if team not in leaderboard])
+        #adding user teams that have no matches created yet (the last annotation removes them)
         leaderboard.extend([team for team in user_teams if team not in leaderboard])
         return leaderboard
 
@@ -385,6 +425,9 @@ class League(models.Model):
     def __unicode__(self):
         return str(self.name)
 
+    class Meta:
+        app_label = 'game'
+
 
 class Prize(models.Model):
     league = models.ForeignKey(League, blank=True, null=True, related_name='prizes')
@@ -401,6 +444,9 @@ class Prize(models.Model):
 
     def __unicode__(self):
         return str(self.name)
+
+    class Meta:
+        app_label = 'game'
 
 
 class FixtureQuerySet(models.QuerySet):
@@ -426,6 +472,9 @@ class Fixture(models.Model):
     def __unicode__(self):
         return str(self.name)
 
+    class Meta:
+        app_label = 'game'
+
 
 class Match(models.Model):
     fixture = models.ForeignKey(Fixture, blank=True, null=True, related_name='matches')
@@ -437,3 +486,6 @@ class Match(models.Model):
 
     def __unicode__(self):
         return "%s - %s - %s: %s" % (str(self.player), str(self.team), str(self.fixture), str(self.score))
+
+    class Meta:
+        app_label = 'game'

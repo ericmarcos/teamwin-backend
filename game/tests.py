@@ -426,7 +426,7 @@ class LeagueResourceTest(APITestCase):
         p21.set("2")
         p22.set("1")
         p23.set("2")
-
+        
         #Checking general leaderboard. Team 2 should be first with 4 points
         #while team 1 should have 3 points
         rnk = l.leaderboard()
