@@ -148,6 +148,9 @@ class Pool(models.Model):
         if self.state == self.STATE_OPEN:
             if not result:
                 raise InvalidPoolResult(result)
+            if self.closing_date < timezone.now():
+                self.close()
+                raise CantPlayPool(self)
             r, created = PoolResult.objects.get_or_create(pool=self, name=result)
             r.players.add(player)
             for team in player.teams.all():
