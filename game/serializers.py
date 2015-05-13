@@ -37,13 +37,14 @@ class TeamLeaderboardSerializer(serializers.ModelSerializer):
     pic = serializers.SerializerMethodField()
     points = serializers.IntegerField()
     played = serializers.IntegerField()
+    did_share = serializers.BooleanField()
 
     def get_pic(self, user):
         return user.profile.get_profile_pic_url()
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username','pic', 'points', 'played')
+        fields = ('id', 'username','pic', 'points', 'played', 'did_share')
 
 
 class TeamLeagueSerializer(serializers.ModelSerializer):
@@ -67,10 +68,15 @@ class TeamShortSerializer(serializers.HyperlinkedModelSerializer):
     pic = serializers.ReadOnlyField(source='get_pic_url')
     players = UserSerializer(many=True, source='active_players', read_only=True)
     captain = UserSerializer(read_only=True)
+    state = serializers.SerializerMethodField()
+
+    def get_state(self, team):
+        user = self.context['request'].user if self.context['request'].user.is_authenticated() else None
+        return team.get_state(user)
 
     class Meta:
         model = Team
-        fields = ('url', 'id', 'name','pic','players','captain',)
+        fields = ('url', 'id', 'name','pic','players','captain', 'state',)
 
 
 class TeamSerializer(serializers.HyperlinkedModelSerializer):

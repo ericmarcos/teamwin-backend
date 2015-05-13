@@ -65,6 +65,11 @@ def get_user_played(user):
         return user.match[0].played
     return 0
 
+def get_user_did_share(user):
+    if hasattr(user, 'match') and len(user.match) > 0:
+        return user.match[0].did_share
+    return 0
+
 
 class PoolQuerySet(models.QuerySet):
 
@@ -233,6 +238,13 @@ class TeamQuerySet(models.QuerySet):
         fr = get_fb_friends(user)
         return self.filter(players=fr).exclude(players=user).distinct()
 
+    def active(self):
+        return self.filter(membership__state=Membership.STATE_ACTIVE)
+
+    def pending(self):
+        return self.filter(Q(membership__state=Membership.STATE_WAITING_CAPTAIN)\
+         | Q(membership__state=Membership.STATE_WAITING_PLAYER))
+
 
 class Team(models.Model):
     objects = TeamQuerySet.as_manager()
@@ -252,6 +264,18 @@ class Team(models.Model):
 
     def is_captain(self, user):
         return self.players.filter(membership__is_captain=True, id=user.id).exists()
+
+    def is_waiting_captain(self, user):
+        return self.players.filter(membership__state=Membership.STATE_WAITING_CAPTAIN, id=user.id).exists()
+
+    def is_waiting_player(self, user):
+        return self.players.filter(membership__state=Membership.STATE_WAITING_PLAYER, id=user.id).exists()
+
+    def get_state(self, user):
+        m = Membership.objects.filter(player=user, team=self).first()
+        if m:
+            return m.state
+        return None
 
     def active_players(self):
         return self.players.filter(membership__state=Membership.STATE_ACTIVE)
@@ -376,31 +400,33 @@ class League(models.Model):
         if not fixture:
             return []
         subq = Match.objects.filter(fixture=fixture, team=team)
-        leaderboard = get_user_model().objects.filter(matches=subq).\
-            prefetch_related('profile', Prefetch('matches', queryset=subq, to_attr='match'))
-        return sorted(leaderboard, key=lambda x: x.points, reverse=True)
+        if prev:
+            lb = get_user_model().objects.filter(matches=subq)
+        else:
+            lb = team.players.all()
+        lb = lb.prefetch_related('profile', Prefetch('matches', queryset=subq, to_attr='match'))
+        return sorted(lb, key=lambda x: x.points, reverse=True)
 
     def leaderboard(self, prev=0, user=None):
         '''
         If user is passed, the returned result will merge the teams of that user to the leaderboard
         with the score of the corresponding fixture
         '''
-        leaderboard = []
         fixture = self.fixtures.prev(prev).first()
         if not fixture:
-            return leaderboard
+            return []
         all_teams = Team.objects.filter(matches__fixture=fixture)
         if not prev:
             all_teams = self.teams.all()
         user_teams = all_teams.filter(players=user) if user else Team.objects.none()
         all_teams = all_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
         user_teams_points = user_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
-        leaderboard = list(all_teams.order_by('-sum_points')[:10])
+        lb = list(all_teams.order_by('-sum_points')[:10])
         #adding user teams that are not in the top 10
-        leaderboard.extend([team for team in user_teams_points if team not in leaderboard])
+        lb.extend([team for team in user_teams_points if team not in lb])
         #adding user teams that have no matches created yet (the last annotation removes them)
-        leaderboard.extend([team for team in user_teams if team not in leaderboard])
-        return leaderboard
+        lb.extend([team for team in user_teams if team not in lb])
+        return lb
 
     def enroll(self, user, team_id):
         t = Team.objects.get(id=team_id)

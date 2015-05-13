@@ -19,7 +19,9 @@ def get_fb_friends(user):
                   social_user.uid,
                   social_user.extra_data['access_token'],
               )
-        resp = requests.get(url).json()
+        resp = requests.get(url)
+        resp.raise_for_status()
+        resp = resp.json()
         friends = resp['data']
         while 'paging' in resp and 'next' in resp['paging']:
             resp = requests.get(resp['paging']['next']).json()

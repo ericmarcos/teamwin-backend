@@ -15,7 +15,6 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'list':
-            print self.action
             return TeamShortSerializer
         return TeamSerializer
 
@@ -23,7 +22,10 @@ class TeamViewSet(viewsets.ModelViewSet):
         if self.action in ['detail', 'request_enroll', 'sign']:
             return Team.objects.all()
         if self.request.query_params.get('friends'):
-            return Team.objects.friends(self.request.user)
+            try:
+                return Team.objects.friends(self.request.user)
+            except Exception as e:
+                raise ParseError(detail=str(e))
         else:
             return self.request.user.teams.all()
 
