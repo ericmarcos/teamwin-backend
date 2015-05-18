@@ -21,7 +21,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action in ['detail', 'request_enroll', 'sign']:
             return Team.objects.all()
-        if self.request.query_params.get('friends'):
+        if self.request.query_params.get('friends', self.request.data.get('friends')):
             try:
                 return Team.objects.friends(self.request.user)
             except Exception as e:
@@ -65,7 +65,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         is set to pending until the player accepts it.
         '''
         team = self.get_object()
-        user = get_user_model().objects.get(id=request.data.get('user_id'))
+        user_id = request.query_params.get('user_id', request.data.get('user_id'))
+        user = get_user_model().objects.get(id=user_id)
         try:
             sign = team.sign(user)
         except Exception as e:
@@ -81,7 +82,8 @@ class TeamViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def fire(self, request, pk=None):
         team = self.get_object()
-        user = get_user_model().objects.get(id=request.data.get('user_id'))
+        user_id = request.query_params.get('user_id', request.data.get('user_id'))
+        user = get_user_model().objects.get(id=user_id)
         try:
             team.fire(user)
         except Exception as e:
@@ -104,9 +106,9 @@ class PoolViewSet(viewsets.ModelViewSet):
 
     
     def get_queryset(self):
-        if self.request.query_params.get('pending'):
+        if self.request.query_params.get('pending', self.request.data.get('pending')):
             return Pool.objects.pending(self.request.user)
-        elif self.request.query_params.get('played'):
+        elif self.request.query_params.get('played', self.request.data.get('played')):
             return Pool.objects.played(self.request.user)
         else:
             return Pool.objects.public()
@@ -115,7 +117,7 @@ class PoolViewSet(viewsets.ModelViewSet):
     def play(self, request, pk=None):
         pool = self.get_object()
         try:
-            result = request.data['result']
+            result = request.query_params.get('result', request.data.get('result'))
             pool.play(request.user, result)
         except Exception as e:
             raise ParseError(detail=str(e))
@@ -125,7 +127,7 @@ class PoolViewSet(viewsets.ModelViewSet):
     def set(self, request, pk=None):
         pool = self.get_object()
         try:
-            result = request.data['result']
+            result = request.query_params.get('result', request.data.get('result'))
             pool.set(result)
         except Exception as e:
             raise ParseError(detail=str(e))
@@ -144,7 +146,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
     def enroll(self, request, pk=None):
         league = self.get_object()
         try:
-            team_id = request.data['team_id']
+            team_id = request.query_params.get('team_id', request.data.get('team_id'))
             league.enroll(request.user, team_id)
         except Exception as e:
             raise ParseError(detail=str(e))
@@ -154,7 +156,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
     def leave(self, request, pk=None):
         league = self.get_object()
         try:
-            team_id = request.data['team_id']
+            team_id = request.query_params.get('team_id', request.data.get('team_id'))
             league.leave(request.user, team_id)
         except Exception as e:
             raise ParseError(detail=str(e))

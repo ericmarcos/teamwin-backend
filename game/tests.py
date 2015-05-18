@@ -262,9 +262,9 @@ class LeagueResourceTest(APITestCase):
         response = self.client.post(url, {'result': '1'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(p.players().count(), 1)
-        # Playing twice should have no effect
+        # Playing twice shouldn't be allowed
         response = self.client.post(url, {'result': '1'})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(p.players().count(), 1)
         # Playing with another user for same result
         self.client.force_authenticate(user=self.user_2)

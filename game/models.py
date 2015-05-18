@@ -148,7 +148,7 @@ class Pool(models.Model):
         if self.state == self.STATE_OPEN:
             if not result:
                 raise InvalidPoolResult(result)
-            if self.closing_date < timezone.now():
+            if self.closing_date and self.closing_date < timezone.now():
                 self.close()
                 raise CantPlayPool(self)
             if PoolResult.objects.filter(players=player, pool=self).exists() and not player.is_staff and not player.profile.is_pro:
