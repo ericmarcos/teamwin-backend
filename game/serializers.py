@@ -16,10 +16,24 @@ class PoolOptionSerializer(serializers.ModelSerializer):
 
 class PoolSerializer(serializers.HyperlinkedModelSerializer):
     options = PoolOptionSerializer(many=True, read_only=True)
+    league = serializers.SerializerMethodField()
+    fixture = serializers.SerializerMethodField()
+
+    def get_league(self, pool):
+        fixture = pool.fixtures.first()
+        if fixture and fixture.league:
+            return fixture.league.name
+        return "Unknown League"
+
+    def get_fixture(self, pool):
+        fixture = pool.fixtures.first()
+        if fixture:
+            return fixture.name
+        return "Unknown Fixture"
 
     class Meta:
         model = Pool
-        fields = ('url', 'id', 'title','created_at','closing_date','pool_type','public','state','options')
+        fields = ('url', 'id', 'title','created_at','closing_date','pool_type','public','state','options', 'league', 'fixture')
 
 
 class UserSerializer(serializers.ModelSerializer):
