@@ -151,6 +151,8 @@ class Pool(models.Model):
             if self.closing_date < timezone.now():
                 self.close()
                 raise CantPlayPool(self)
+            if PoolResult.objects.filter(players=player, pool=self).exists() and not player.is_staff and not player.profile.is_pro:
+                raise CantPlayPool(self)
             r, created = PoolResult.objects.get_or_create(pool=self, name=result)
             r.players.add(player)
             for team in player.teams.all():
