@@ -6,8 +6,6 @@ from django.db.models import Sum, Count, Q, F, When, Case, Value, Prefetch
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from users.models import get_fb_friends
-
 
 class PlayerBelongsToTooManyTeams(Exception):
     def __init__(self, user, *args, **kwargs):
@@ -240,8 +238,8 @@ class PoolResult(models.Model):
 class TeamQuerySet(models.QuerySet):
 
     def friends(self, user):
-        fr = get_fb_friends(user)
-        return self.filter(players=fr).exclude(players=user).distinct()
+        fr = user.profile.friends.all()
+        return self.filter(players__profile=fr).exclude(players=user).distinct()
 
     def active(self):
         return self.filter(membership__state=Membership.STATE_ACTIVE)

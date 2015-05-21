@@ -1,3 +1,5 @@
+import collections
+
 import requests
 from django.conf import settings
 from django.db import models
@@ -41,6 +43,7 @@ class DareyooUserProfile(models.Model):
     locale = models.CharField(max_length=255, blank=True, null=True)
     location = models.CharField(max_length=255, blank=True, null=True)
     timezone = models.CharField(max_length=255, blank=True, null=True)
+    friends = models.ManyToManyField("self", blank=True)
     is_pro = models.BooleanField(default=False)
     push_notifications = models.BooleanField(default=True)
     email_notifications = models.BooleanField(default=True)
@@ -50,6 +53,15 @@ class DareyooUserProfile(models.Model):
             return self.pic._get_url().split('?')[0]
         else:
             return get_default_profile_pic(self.user.id)
+
+    def add_friend(self, user):
+        '''
+        Can take a single user or a list of users
+        '''
+        if isinstance(user, collections.Iterable):
+            self.friends.add(*[u.profile for u in user])
+        else:
+            self.friends.add(user.profile)
 
     def __unicode__(self):
         return "%s - %s" % (self.user.email, self.user.username)

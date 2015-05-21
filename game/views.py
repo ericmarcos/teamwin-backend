@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ParseError
@@ -8,6 +8,25 @@ from rest_framework.response import Response
 from .models import *
 from .permissions import *
 from .serializers import *
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    #permission_classes = [TeamPermission,]
+    queryset = get_user_model().objects.all()
+
+    def get_queryset(self):
+        if self.action == 'list':
+            return get_user_model().objects.filter(id=self.request.user.id)
+        elif self.action == 'delete':
+            return get_user_model().objects.none()
+        return get_user_model().objects.all()
+
+    def get_serializer_class(self):
+        return UserSerializer
+
+    @list_route()
+    def me(self, request, pk=None):
+        return Response(UserFullSerializer(request.user).data)
 
 
 class TeamViewSet(viewsets.ModelViewSet):

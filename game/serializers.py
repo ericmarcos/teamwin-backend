@@ -47,6 +47,22 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username','pic',)
 
 
+class UserFullSerializer(serializers.ModelSerializer):
+    pic = serializers.SerializerMethodField()
+    friends = serializers.SerializerMethodField()
+
+    def get_friends(self, user):
+        friends = [profile.user for profile in user.profile.friends.all()]
+        return UserSerializer(friends, many=True, context=self.context).data
+
+    def get_pic(self, user):
+        return user.profile.get_profile_pic_url()
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'username','pic', 'friends')
+
+
 class TeamLeaderboardSerializer(serializers.ModelSerializer):
     pic = serializers.SerializerMethodField()
     points = serializers.IntegerField()

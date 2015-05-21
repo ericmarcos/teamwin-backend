@@ -33,3 +33,13 @@ def save_profile_picture(backend, user, response, *args, **kwargs):
             user.profile.save()
         except Exception as e:
             pass
+
+
+def save_friends(backend, user, response, *args, **kwargs):
+    if user and  backend.name == 'facebook' and kwargs.get('is_new'):
+        try:
+            friends = get_fb_friends(user)
+            user.profile.add_friend(friends)
+            #TODO Notify friends
+        except Exception as e:
+            pass
