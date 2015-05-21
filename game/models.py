@@ -408,7 +408,7 @@ class League(models.Model):
         if prev:
             lb = get_user_model().objects.filter(matches=subq)
         else:
-            lb = team.players.all()
+            lb = team.players.filter(membership__state=Membership.STATE_ACTIVE)
         lb = lb.prefetch_related('profile', Prefetch('matches', queryset=subq, to_attr='match'))
         return sorted(lb, key=lambda x: x.points, reverse=True)
 
