@@ -11,7 +11,7 @@ from .serializers import *
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    #permission_classes = [TeamPermission,]
+    permission_classes = [IsAuthenticated,]
     queryset = get_user_model().objects.all()
 
     def get_queryset(self):
@@ -33,8 +33,8 @@ class TeamViewSet(viewsets.ModelViewSet):
     permission_classes = [TeamPermission,]
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return TeamShortSerializer
+        #if self.action == 'list':
+        #    return TeamShortSerializer
         return TeamSerializer
 
     def get_queryset(self):
@@ -45,6 +45,10 @@ class TeamViewSet(viewsets.ModelViewSet):
                 return Team.objects.friends(self.request.user)
             except Exception as e:
                 raise ParseError(detail=str(e))
+        elif self.request.query_params.get('pending', self.request.data.get('pending')):
+            return self.request.user.teams.pending()
+        elif self.action == 'list':
+            return self.request.user.teams.active()
         else:
             return self.request.user.teams.all()
 

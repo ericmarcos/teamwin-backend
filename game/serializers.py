@@ -82,11 +82,13 @@ class TeamLeagueSerializer(serializers.ModelSerializer):
     prev_leaderboard = serializers.SerializerMethodField()
 
     def get_leaderboard(self, league):
-        leaderboard = league.team_leaderboard(self.context['view'].get_object())
+        team = self.context.get('team') or self.context['view'].get_object()
+        leaderboard = league.team_leaderboard(team)
         return TeamLeaderboardSerializer(leaderboard, many=True, context=self.context).data
 
     def get_prev_leaderboard(self, league):
-        leaderboard = league.team_leaderboard(self.context['view'].get_object(), prev=1)
+        team = self.context.get('team') or self.context['view'].get_object()
+        leaderboard = league.team_leaderboard(team, prev=1)
         return TeamLeaderboardSerializer(leaderboard, many=True, context=self.context).data
 
     class Meta:
@@ -115,11 +117,20 @@ class TeamSerializer(serializers.HyperlinkedModelSerializer):
     players_waiting_captain = UserSerializer(many=True, source='waiting_captain', read_only=True)
     players_pending = UserSerializer(many=True, source='waiting_players', read_only=True)
     captain = UserSerializer(read_only=True)
-    leagues = TeamLeagueSerializer(many=True, read_only=True)
+    leagues = serializers.SerializerMethodField()
+    state = serializers.SerializerMethodField()
+
+    def get_leagues(self, team):
+        self.context['team'] = team
+        return TeamLeagueSerializer(team.leagues.all(), many=True, context=self.context).data
+
+    def get_state(self, team):
+        user = self.context['request'].user if self.context['request'].user.is_authenticated() else None
+        return team.get_state(user)
 
     class Meta:
         model = Team
-        fields = ('url', 'id', 'name','pic','players','players_waiting_captain','players_pending','captain', 'leagues')
+        fields = ('url', 'id', 'name','pic','players','players_waiting_captain','players_pending','captain', 'leagues', 'state')
 
 
 class LeagueLeaderboardSerializer(serializers.HyperlinkedModelSerializer):
