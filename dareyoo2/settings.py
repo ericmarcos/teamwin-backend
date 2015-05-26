@@ -25,8 +25,7 @@ SECRET_KEY = 's_+3wxw#a86nsx@y(7yjcya#rt7eek3j)&^hcpi(s25lqy4#41'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['dareyoo.herokuapp.com', 'dareyoo2.herokuapp.com', 'dareyoo-pro.herokuapp.com', 'dareyoo-pre.herokuapp.com', '.dareyoo.com', '.dareyoo.net', '.dareyoo.es', '.dareyoo.dev']
 
 # Application definition
 
