@@ -162,7 +162,7 @@ REST_FRAMEWORK = {
 }
 
 ### CORS ###
-CORS_URLS_REGEX = r'^/api/.*$'
+CORS_URLS_REGEX = r'^(/api/.*|/auth/.*)$'
 CORS_ORIGIN_ALLOW_ALL = True
 
 # DAREYOO
