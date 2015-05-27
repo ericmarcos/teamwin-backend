@@ -59,9 +59,15 @@ class DareyooUserProfile(models.Model):
         Can take a single user or a list of users
         '''
         if isinstance(user, collections.Iterable):
-            self.friends.add(*[u.profile for u in user])
+            try:
+                self.friends.add(*[u.profile for u in user])
+            except:
+                self.friends.add(*user)
         else:
-            self.friends.add(user.profile)
+            try:
+                self.friends.add(user.profile)
+            except:
+                self.friends.add(user)
 
     def __unicode__(self):
         return "%s - %s" % (self.user.email, self.user.username)
