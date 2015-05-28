@@ -198,7 +198,7 @@ class Pool(models.Model):
         return PoolResult.objects.filter(is_winner=True).first()
 
     def __unicode__(self):
-        return str(self.title)
+        return unicode(self.title)
 
     class Meta:
         app_label = 'game'
@@ -216,7 +216,7 @@ class PoolOption(models.Model):
             return ""
 
     def __unicode__(self):
-        return str(self.name)
+        return unicode(self.name)
 
     class Meta:
         app_label = 'game'
@@ -229,7 +229,7 @@ class PoolResult(models.Model):
     is_winner = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return str(self.name)
+        return unicode(self.name)
 
     class Meta:
         app_label = 'game'
@@ -348,7 +348,7 @@ class Team(models.Model):
             return ""
 
     def __unicode__(self):
-        return str(self.name)
+        return unicode(self.name)
 
     class Meta:
         app_label = 'game'
@@ -452,7 +452,7 @@ class League(models.Model):
             return ""
 
     def __unicode__(self):
-        return str(self.name)
+        return unicode(self.name)
 
     class Meta:
         app_label = 'game'
@@ -472,7 +472,7 @@ class Prize(models.Model):
             return ""
 
     def __unicode__(self):
-        return str(self.name)
+        return unicode(self.name)
 
     class Meta:
         app_label = 'game'
@@ -499,7 +499,7 @@ class Fixture(models.Model):
     end_date = models.DateTimeField(blank=True, null=True)
 
     def __unicode__(self):
-        return str(self.name)
+        return unicode(self.name)
 
     class Meta:
         app_label = 'game'
@@ -514,7 +514,7 @@ class Match(models.Model):
     did_share = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return "%s - %s - %s: %s" % (str(self.player), str(self.team), str(self.fixture), str(self.score))
+        return "%s - %s - %s: %s" % (unicode(self.player), unicode(self.team), unicode(self.fixture), unicode(self.score))
 
     class Meta:
         app_label = 'game'
