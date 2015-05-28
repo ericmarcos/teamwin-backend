@@ -20,16 +20,16 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
     fixture = serializers.SerializerMethodField()
 
     def get_league(self, pool):
-        fixture = pool.fixtures.first()
-        if fixture and fixture.league:
-            return fixture.league.name
-        return "Unknown League"
+        try:
+            return pool.fixtures.first().league.name
+        except:
+            return None
 
     def get_fixture(self, pool):
-        fixture = pool.fixtures.first()
-        if fixture:
-            return fixture.name
-        return "Unknown Fixture"
+        try:
+            return pool.fixtures.first().name
+        except:
+            return None
 
     class Meta:
         model = Pool
@@ -50,17 +50,37 @@ class UserSerializer(serializers.ModelSerializer):
 class UserFullSerializer(serializers.ModelSerializer):
     pic = serializers.SerializerMethodField()
     friends = serializers.SerializerMethodField()
+    ionic_id = serializers.SerializerMethodField()
+    device_token = serializers.SerializerMethodField()
 
     def get_friends(self, user):
-        friends = [profile.user for profile in user.profile.friends.all()]
-        return UserSerializer(friends, many=True, context=self.context).data
+        try:
+            friends = [profile.user for profile in user.profile.friends.all()]
+            return UserSerializer(friends, many=True, context=self.context).data
+        except:
+            return []
 
     def get_pic(self, user):
-        return user.profile.get_profile_pic_url()
+        try:
+            return user.profile.get_profile_pic_url()
+        except:
+            return None
+
+    def get_ionic_id(self, user):
+        try:
+            return user.profile.ionic_id
+        except:
+            return None
+
+    def get_device_token(self, user):
+        try:
+            return user.devices.first().token
+        except:
+            return None
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username','pic', 'friends')
+        fields = ('id', 'ionic_id', 'username','pic', 'friends', 'device_token',)
 
 
 class TeamLeaderboardSerializer(serializers.ModelSerializer):

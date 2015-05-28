@@ -36,6 +36,7 @@ def get_fb_friends(user):
 
 class DareyooUserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='profile')
+    ionic_id = models.CharField(max_length=255, blank=True, null=True)
     invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name='users_invited')
     campaign = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='profiles', null=True, blank=True)
@@ -74,7 +75,7 @@ class DareyooUserProfile(models.Model):
 
 
 class Device(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='devices')
     token = models.CharField(max_length=255, blank=True, null=True)
 
     def __unicode__(self):

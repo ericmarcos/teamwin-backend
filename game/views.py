@@ -5,6 +5,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 
+from users.models import *
 from .models import *
 from .permissions import *
 from .serializers import *
@@ -24,9 +25,23 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return UserSerializer
 
-    @list_route()
+    @list_route(methods=['GET', 'POST'])
     def me(self, request, pk=None):
-        return Response(UserFullSerializer(request.user).data)
+        if request.method == 'GET':
+            return Response(UserFullSerializer(request.user).data)
+        else:
+            ionic_id = request.data.get('ionic_id')
+            if ionic_id:
+                request.user.ionic_id = ionic_id
+                request.user.save()
+            device_token = request.data.get('device_token')
+            device = request.user.devices.first()
+            if device_token:
+                if not device:
+                    Device.objects.create(user=request.user, token=device_token)
+                elif device.token != device_token:
+                    Device.objects.filter(user=request.user).update(token=device_token)
+            return Response(UserFullSerializer(request.user).data)
 
 
 class TeamViewSet(viewsets.ModelViewSet):
