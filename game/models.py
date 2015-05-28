@@ -211,7 +211,7 @@ class PoolOption(models.Model):
 
     def get_pic_url(self):
         if self.pic:
-            return self.pic._get_url()
+            return self.pic._get_url().split('?')[0]
         else:
             return ""
 
@@ -347,7 +347,7 @@ class Team(models.Model):
 
     def get_pic_url(self):
         if self.pic:
-            return self.pic._get_url()
+            return self.pic._get_url().split('?')[0]
         else:
             return get_default_team_pic(self.id)
 
@@ -451,7 +451,7 @@ class League(models.Model):
 
     def get_pic_url(self):
         if self.pic:
-            return self.pic._get_url()
+            return self.pic._get_url().split('?')[0]
         else:
             return ""
 
@@ -471,7 +471,7 @@ class Prize(models.Model):
 
     def get_pic_url(self):
         if self.pic:
-            return self.pic._get_url()
+            return self.pic._get_url().split('?')[0]
         else:
             return ""
 
