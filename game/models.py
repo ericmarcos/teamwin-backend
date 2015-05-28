@@ -249,6 +249,10 @@ class TeamQuerySet(models.QuerySet):
          | Q(membership__state=Membership.STATE_WAITING_PLAYER))
 
 
+def get_default_team_pic(team_id):
+    return settings.DEFAULT_TEAM_PIC_URL % ((team_id or 1) % 10)
+
+
 class Team(models.Model):
     objects = TeamQuerySet.as_manager()
 
@@ -345,7 +349,7 @@ class Team(models.Model):
         if self.pic:
             return self.pic._get_url()
         else:
-            return ""
+            return get_default_team_pic(self.id)
 
     def __unicode__(self):
         return unicode(self.name)

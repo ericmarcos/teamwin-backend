@@ -185,6 +185,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 # DAREYOO
 
 DEFAULT_PROFILE_PIC_URL = STATIC_URL + 'default_profile_pics/profile_%s.png'
+DEFAULT_TEAM_PIC_URL = STATIC_URL + 'default_team_pics/team_%s.png'
 
 DAREYOO_MAX_PLAYERS = 11 # Max players per team
 DAREYOO_MAX_TEAMS = 5 # Max teams per player
