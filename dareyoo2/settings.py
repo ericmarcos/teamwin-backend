@@ -183,6 +183,12 @@ AWS_QUERYSTRING_AUTH = False
 CORS_URLS_REGEX = r'^(/api/.*|/auth/.*)$'
 CORS_ORIGIN_ALLOW_ALL = True
 
+# IONIC
+
+IONIC_APP_ID = os.environ.get('IONIC_APP_ID')
+IONIC_API_KEY = os.environ.get('IONIC_API_KEY')
+
+
 # DAREYOO
 
 DEFAULT_PROFILE_PIC_URL = STATIC_URL + 'default_profile_pics/profile_%s.png'

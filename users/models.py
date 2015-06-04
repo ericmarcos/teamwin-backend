@@ -1,4 +1,7 @@
 import collections
+import urllib2
+import base64
+import json
 
 import requests
 from django.conf import settings
@@ -32,6 +35,28 @@ def get_fb_friends(user):
         in_app_friends = get_user_model().objects.filter(social_auth__uid__in=uids, social_auth__provider='facebook')
         return in_app_friends
     return []
+
+
+def send_push(users, text, payload=None):
+    tokens = [u.devices.first().token for u in users if u.devices.first()]
+    post_data = {
+        'tokens': tokens,
+        'notification': {
+            'alert': text,
+            #'android': { 'payload': payload },
+            #'ios': { 'payload': payload }
+        }
+    }
+    app_id = settings.IONIC_APP_ID
+    private_key = settings.IONIC_API_KEY
+    url = "https://push.ionic.io/api/v1/push"
+    req = urllib2.Request(url, data=json.dumps(post_data))
+    req.add_header("Content-Type", "application/json")
+    req.add_header("X-Ionic-Application-Id", app_id)
+    b64 = base64.encodestring('%s:' % private_key).replace('\n', '')
+    req.add_header("Authorization", "Basic %s" % b64)
+    resp = urllib2.urlopen(req)
+    return resp
 
 
 class DareyooUserProfile(models.Model):
