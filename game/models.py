@@ -6,6 +6,8 @@ from django.db.models import Sum, Count, Q, F, When, Case, Value, Prefetch
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+from users.models import *
+
 
 class PlayerBelongsToTooManyTeams(Exception):
     def __init__(self, user, *args, **kwargs):
@@ -308,10 +310,14 @@ class Team(models.Model):
         self.check_limits(user)
         m, created = Membership.objects.get_or_create(team=self, player=user)
         if created:
-            m.state = m.STATE_WAITING_CAPTAIN
-            # TODO send request to captain
+            if Membership.objects.filter(player=user).count() == 1:
+                send_push(self.captain, u"%s se ha unido a tu equipo %s" % (user.username, self.name))
+            else:
+                m.state = m.STATE_WAITING_CAPTAIN
+                send_push(self.captain, u"%s ha pedido unirse a tu equipo %s" % (user.username, self.name))
         elif m.state == m.STATE_WAITING_PLAYER:
             m.state = m.STATE_ACTIVE
+            #TODO create matches for pools of this team
         else:
             return False
         m.save()
@@ -321,10 +327,12 @@ class Team(models.Model):
         m, created = Membership.objects.get_or_create(team=self, player=user)
         if created:
             m.state = m.STATE_WAITING_PLAYER
-            #send request to player
+            send_push(user, u"¡%s, capitán del equipo %s, quiere ficharte!" % (user.username, self.name))
         elif m.state == m.STATE_WAITING_CAPTAIN:
             self.check_limits(user)
             m.state = m.STATE_ACTIVE
+            send_push(user, u"¡Felicidades! %s, capitán del equipo %s, ha aceptado tu fichaje." % (user.username, self.name))
+            #TODO create matches for pools of this team
         else:
             return False
         m.save()
