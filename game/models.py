@@ -317,6 +317,7 @@ class Team(models.Model):
                 send_push(self.captain, u"%s ha pedido unirse a tu equipo %s" % (user.username, self.name))
         elif m.state == m.STATE_WAITING_PLAYER:
             m.state = m.STATE_ACTIVE
+            send_push(self.captain, u"%s se ha unido a tu equipo %s" % (user.username, self.name))
             #TODO create matches for pools of this team
         else:
             return False
