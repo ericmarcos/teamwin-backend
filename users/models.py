@@ -38,15 +38,19 @@ def get_fb_friends(user):
 
 
 def send_push(users, text, payload=None):
-    tokens = [u.devices.first().token for u in users if u.devices.first()]
+    if isinstance(users, collections.Iterable):
+        tokens = [u.devices.first().token for u in users if u.devices.first()]
+    elif users.devices.first():
+        tokens = [users.devices.first().token]
     post_data = {
         'tokens': tokens,
         'notification': {
             'alert': text,
-            #'android': { 'payload': payload },
-            #'ios': { 'payload': payload }
         }
     }
+    if payload:
+        post_data['notification']['android'] = {'payload':payload}
+        post_data['notification']['ios'] = {'payload':payload}
     app_id = settings.IONIC_APP_ID
     private_key = settings.IONIC_API_KEY
     url = "https://push.ionic.io/api/v1/push"
