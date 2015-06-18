@@ -38,29 +38,31 @@ def get_fb_friends(user):
 
 
 def send_push(users, text, payload=None):
+    tokens = []
     if isinstance(users, collections.Iterable):
         tokens = [u.devices.first().token for u in users if u.devices.first()]
     elif users.devices.first():
         tokens = [users.devices.first().token]
-    post_data = {
-        'tokens': tokens,
-        'notification': {
-            'alert': text,
+    if tokens:
+        post_data = {
+            'tokens': tokens,
+            'notification': {
+                'alert': text,
+            }
         }
-    }
-    if payload:
-        post_data['notification']['android'] = {'payload':payload}
-        post_data['notification']['ios'] = {'payload':payload}
-    app_id = settings.IONIC_APP_ID
-    private_key = settings.IONIC_API_KEY
-    url = "https://push.ionic.io/api/v1/push"
-    req = urllib2.Request(url, data=json.dumps(post_data))
-    req.add_header("Content-Type", "application/json")
-    req.add_header("X-Ionic-Application-Id", app_id)
-    b64 = base64.encodestring('%s:' % private_key).replace('\n', '')
-    req.add_header("Authorization", "Basic %s" % b64)
-    resp = urllib2.urlopen(req)
-    return resp
+        if payload:
+            post_data['notification']['android'] = {'payload':payload}
+            post_data['notification']['ios'] = {'payload':payload}
+        app_id = settings.IONIC_APP_ID
+        private_key = settings.IONIC_API_KEY
+        url = "https://push.ionic.io/api/v1/push"
+        req = urllib2.Request(url, data=json.dumps(post_data))
+        req.add_header("Content-Type", "application/json")
+        req.add_header("X-Ionic-Application-Id", app_id)
+        b64 = base64.encodestring('%s:' % private_key).replace('\n', '')
+        req.add_header("Authorization", "Basic %s" % b64)
+        resp = urllib2.urlopen(req)
+        return resp
 
 
 class DareyooUserProfile(models.Model):
