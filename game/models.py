@@ -314,13 +314,13 @@ class Team(models.Model):
         m, created = Membership.objects.get_or_create(team=self, player=user)
         if created:
             if Membership.objects.filter(player=user).count() == 1:
-                send_push(self.captain, u"%s se ha unido a tu equipo %s" % (user.username, self.name))
+                send_push(self.captain(), u"%s se ha unido a tu equipo %s" % (user.username, self.name))
             else:
                 m.state = m.STATE_WAITING_CAPTAIN
-                send_push(self.captain, u"%s ha pedido unirse a tu equipo %s" % (user.username, self.name))
+                send_push(self.captain(), u"%s ha pedido unirse a tu equipo %s" % (user.username, self.name))
         elif m.state == m.STATE_WAITING_PLAYER:
             m.state = m.STATE_ACTIVE
-            send_push(self.captain, u"%s se ha unido a tu equipo %s" % (user.username, self.name))
+            send_push(self.captain(), u"%s se ha unido a tu equipo %s" % (user.username, self.name))
             for f in self.current_fixtures():
                 p = Pool.objects.filter(fixture=f, results__players=user).count()
                 w = Pool.objects.filter(fixture=f, results=PoolResult.objects.filter(players=user, is_winner=True)).count()
