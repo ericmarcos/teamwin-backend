@@ -137,6 +137,15 @@ class TeamViewSet(viewsets.ModelViewSet):
             raise ParseError(detail=str(e))
         return Response({'status': 'You left the team %s' % team.id})
 
+    @detail_route(methods=['post'])
+    def upload_avatar(self, request, *args, **kwargs):
+        team = self.get_object()
+        ext = "jpg" if request.FILES['avatar'].content_type == 'image/jpeg' else 'png'
+        request.FILES['avatar'].name = '{0}_team.{1}'.format(team.id, ext)
+        team.pic = request.FILES['avatar']
+        team.save()
+        return Response({'status': 'Avatar uploaded successfully.', 'url': team.get_pic_url()})
+
 
 class PoolViewSet(viewsets.ModelViewSet):
     serializer_class = PoolSerializer
