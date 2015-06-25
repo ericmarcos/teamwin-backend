@@ -35,7 +35,7 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_user_result(self, pool):
         try:
-            return pool.results.filter(players=self).first().name
+            return pool.results.filter(players=self.context['request'].user).first().name
         except:
             return None
 
