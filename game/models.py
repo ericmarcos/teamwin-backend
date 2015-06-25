@@ -106,6 +106,9 @@ class PoolQuerySet(models.QuerySet):
     def pending(self, player):
         return self.open().filter(fixtures__league__teams__players=player).exclude(results__players=player).distinct()
 
+    def current(self, player):
+        return self.open().filter(fixtures__league__teams__players=player).distinct()
+
 
 class Pool(models.Model):
     STATE_DRAFT = 'state_draft'

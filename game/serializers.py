@@ -18,6 +18,8 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
     options = PoolOptionSerializer(many=True, read_only=True)
     league = serializers.SerializerMethodField()
     fixture = serializers.SerializerMethodField()
+    user_result = serializers.SerializerMethodField()
+    result = serializers.SerializerMethodField()
 
     def get_league(self, pool):
         try:
@@ -31,9 +33,21 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
         except:
             return None
 
+    def get_user_result(self, pool):
+        try:
+            return pool.results.filter(players=self).first().name
+        except:
+            return None
+
+    def get_result(self, pool):
+        try:
+            return pool.winner_result().name
+        except:
+            return None
+
     class Meta:
         model = Pool
-        fields = ('url', 'id', 'title','created_at','closing_date','pool_type','public','state','options', 'league', 'fixture')
+        fields = ('url', 'id', 'title','created_at','closing_date','pool_type','public','state','options', 'league', 'fixture', 'user_result', 'result')
 
 
 class UserSerializer(serializers.ModelSerializer):

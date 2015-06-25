@@ -157,6 +157,8 @@ class PoolViewSet(viewsets.ModelViewSet):
             return Pool.objects.pending(self.request.user)
         elif self.request.query_params.get('played', self.request.data.get('played')):
             return Pool.objects.played(self.request.user)
+        elif self.request.query_params.get('current', self.request.data.get('current')):
+            return Pool.objects.current(self.request.user)
         else:
             return Pool.objects.public()
 
