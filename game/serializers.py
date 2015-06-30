@@ -99,7 +99,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username','pic',)
+        fields = ('id', 'username','pic', 'first_name')
 
 
 class UserFullSerializer(serializers.ModelSerializer):
@@ -135,7 +135,7 @@ class UserFullSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'ionic_id', 'username','pic', 'friends', 'device_token',)
+        fields = ('id', 'ionic_id', 'username','pic', 'friends', 'device_token', 'first_name')
 
 
 class TeamLeaderboardSerializer(serializers.ModelSerializer):
