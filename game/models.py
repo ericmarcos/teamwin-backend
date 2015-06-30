@@ -212,8 +212,31 @@ class Pool(models.Model):
         app_label = 'game'
 
 
+class Item(models.Model):
+    parent = models.ForeignKey("self", blank=True, null=True, related_name="members")
+    name = models.CharField(max_length=255, blank=True, null=True)
+    short_name = models.CharField(max_length=255, blank=True, null=True)
+    number = models.CharField(max_length=255, blank=True, null=True)
+    pic = models.ImageField(upload_to='items', null=True, blank=True)
+    color = models.CharField(max_length=255, blank=True, null=True)
+    second_color = models.CharField(max_length=255, blank=True, null=True)
+
+    def get_pic_url(self):
+        if self.pic:
+            return self.pic._get_url().split('?')[0]
+        else:
+            return ""
+
+    def __unicode__(self):
+        return unicode(self.name)
+
+    class Meta:
+        app_label = 'game'
+
+
 class PoolOption(models.Model):
     pool = models.ForeignKey(Pool, blank=True, null=True, related_name='options')
+    item = models.ForeignKey(Item, blank=True, null=True, related_name='pool_options')
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='pool_options', null=True, blank=True)
 

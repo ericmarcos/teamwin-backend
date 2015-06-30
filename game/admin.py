@@ -26,6 +26,7 @@ class TeamAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Pool, PoolAdmin)
+admin.site.register(Item)
 admin.site.register(Team, TeamAdmin)
 
 

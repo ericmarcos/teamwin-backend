@@ -7,11 +7,52 @@ from .models import *
 
 
 class PoolOptionSerializer(serializers.ModelSerializer):
-    pic = serializers.ReadOnlyField(source='get_pic_url')
+    pic = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    short_name = serializers.SerializerMethodField()
+    number = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
+    second_color = serializers.SerializerMethodField()
+
+    def get_pic(self, option):
+        try:
+            return option.get_pic_url() or option.item.get_pic_url()
+        except:
+            return option.get_pic_url()
+
+    def get_name(self, option):
+        try:
+            return option.name or option.item.name
+        except:
+            return option.name
+
+    def get_short_name(self, option):
+        try:
+            return option.item.short_name
+        except:
+            return option.name
+
+    def get_number(self, option):
+        try:
+            return option.item.number
+        except:
+            return None
+
+    def get_color(self, option):
+        try:
+            return option.item.color
+        except:
+            return None
+
+    def get_second_color(self, option):
+        try:
+            return option.item.second_color
+        except:
+            return None
 
     class Meta:
         model = PoolOption
-        fields = ('name', 'pic', )
+        fields = ('name', 'pic', 'short_name', 'color', 'second_color', 'number')
 
 
 class PoolSerializer(serializers.HyperlinkedModelSerializer):
