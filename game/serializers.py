@@ -149,7 +149,7 @@ class TeamLeaderboardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username','pic', 'points', 'played', 'did_share')
+        fields = ('id', 'username','pic', 'points', 'played', 'did_share', 'first_name')
 
 
 class TeamLeagueSerializer(serializers.ModelSerializer):
