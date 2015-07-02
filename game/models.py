@@ -348,8 +348,10 @@ class Team(models.Model):
             m.state = m.STATE_ACTIVE
             send_push(self.captain(), u"%s se ha unido a tu equipo %s" % (user.username, self.name))
             for f in self.current_fixtures():
-                p = Pool.objects.filter(fixture=f, results__players=user).count()
-                w = Pool.objects.filter(fixture=f, results=PoolResult.objects.filter(players=user, is_winner=True)).count()
+                p = Pool.objects.filter(fixtures=f, results__players=user).count()
+                #If you join a team in the middle of a fixture, I won't count the winning pools
+                #I want to avoid people creating teams of winning players on the fly...
+                #w = Pool.objects.filter(fixture=f, results=PoolResult.objects.filter(players=user, is_winner=True)).count()
                 Match.objects.create(player=user, team=self, fixture=f, played=p)
         else:
             return False
