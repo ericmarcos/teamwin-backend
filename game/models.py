@@ -368,8 +368,8 @@ class Team(models.Model):
             m.state = m.STATE_ACTIVE
             send_push(user, u"¡Felicidades! %s, capitán del equipo %s, ha aceptado tu fichaje." % (user.username, self.name))
             for f in self.current_fixtures():
-                p = Pool.objects.filter(fixture=f, results__players=user).count()
-                w = Pool.objects.filter(fixture=f, results=PoolResult.objects.filter(players=user, is_winner=True)).count()
+                p = Pool.objects.filter(fixtures=f, results__players=user).count()
+                w = Pool.objects.filter(fixtures=f, results=PoolResult.objects.filter(players=user, is_winner=True)).count()
                 Match.objects.create(player=user, team=self, fixture=f, played=p)
         else:
             return False
