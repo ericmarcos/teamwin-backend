@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from .models import DareyooUserProfile
+from .models import DareyooUserProfile, get_fb_friends, send_push
 
 
 def save_profile(backend, user, response, *args, **kwargs):
@@ -40,6 +40,10 @@ def save_friends(backend, user, response, *args, **kwargs):
         try:
             friends = get_fb_friends(user)
             user.profile.add_friend(friends)
-            #TODO Notify friends
+            if user.profile.gender == 'male':
+                msg = 'Tu amigo %s acaba de unirse a Teamwin.' % (user.first_name or user.username)
+            else:
+                msg = 'Tu amiga %s acaba de unirse a Teamwin.' % (user.first_name or user.username)
+            send_push(friends, msg)
         except Exception as e:
             pass
