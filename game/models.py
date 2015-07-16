@@ -214,6 +214,8 @@ class Pool(models.Model):
             self.resolved_at = timezone.now()
             self.save()
             Match.objects.filter(fixture__pools=self, player__results=r).update(score=F('score') + 1)
+            for f in self.fixtures.all():
+                f.check_winner.delay(f.id)
         else:
             raise InvalidPoolTransition(self.state, self.STATE_SET)
 
@@ -472,8 +474,8 @@ class League(models.Model):
         now = timezone.now()
         return self.fixtures.prev(prev).first()
 
-    def team_leaderboard(self, team, prev=0):
-        fixture = self.fixtures.prev(prev).first()
+    def team_leaderboard(self, team, prev=0, fixture=None):
+        fixture = fixture or self.fixtures.prev(prev).first()
         if not fixture:
             return []
         subq = Match.objects.filter(fixture=fixture, team=team)
@@ -484,12 +486,12 @@ class League(models.Model):
         lb = lb.prefetch_related('profile', Prefetch('matches', queryset=subq, to_attr='match'))
         return sorted(lb, key=lambda x: x.points, reverse=True)
 
-    def leaderboard(self, prev=0, user=None):
+    def leaderboard(self, prev=0, user=None, fixture=None):
         '''
         If user is passed, the returned result will merge the teams of that user to the leaderboard
         with the score of the corresponding fixture
         '''
-        fixture = self.fixtures.prev(prev).first()
+        fixture = fixture or self.fixtures.prev(prev).first()
         if not fixture:
             return []
         all_teams = Team.objects.filter(matches__fixture=fixture)
@@ -512,12 +514,21 @@ class League(models.Model):
         if t.leagues.count() >= settings.DAREYOO_MAX_LEAGUES:
             raise TooManyLeagues(t)
         self.teams.add(t)
+        f = self.current_fixture()
+        if f and not Match.objects.filter(fixture=f, team=t).exists():
+            matches = []
+            for p in t.active_players():
+                matches.append(Match(fixture=f, team=t, player=p))
+            Match.objects.bulk_create(matches)
 
     def leave(self, user, team_id):
         t = Team.objects.get(id=team_id)
         if not t.is_captain(user):
             raise NotCaptain
         self.teams.remove(t)
+        f = self.current_fixture()
+        if f:
+            Match.objects.filter(fixture=f, team=t).delete()
 
     def get_pic_url(self):
         if self.pic:
@@ -571,6 +582,44 @@ class Fixture(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        super(Fixture, self).save(*args, **kwargs)
+        self.start_fixture.apply_async([self.id], eta=self.start_date)
+
+    @staticmethod
+    @shared_task
+    def start_fixture(fixture_id):
+        now = timezone.now()
+        f = Fixture.objects.get(id=fixture_id)
+        if now > f.start_date and now < f.end_date and f.matches.count() == 0:
+            matches = []
+            for t in f.league.teams.all():
+                for p in t.active_players():
+                    matches.append(Match(fixture=f, team=t, player=p))
+            Match.objects.bulk_create(matches)
+
+    @staticmethod
+    @shared_task
+    def check_winner(fixture_id):
+        try:
+            f = Fixture.objects.get(id=fixture_id)
+            if not f.pools.all().exclude(state=Pool.STATE_SET).exists():
+                w = f.get_winners()
+                payload = { "$state": "winner" }
+                send_push(w, u"¡Felicidades! Has ganado la %s de la %s." % (f.name, f.league.name), payload)
+        except Exception as e:
+            print e
+
+    def get_winners(self):
+        lb = self.league.leaderboard(fixture=self)
+        top_teams = filter(lambda t:t.points==lb[0].points, lb)
+        top_players = []
+        for t in top_teams:
+            tlb = self.league.team_leaderboard(t, fixture=self)
+            top_players += filter(lambda p:p.points==tlb[0].points, tlb)
+        max_points = max(pl.points for pl in top_players)
+        return list(set(filter(lambda p:p.points==max_points, top_players))) #Removing dupes
 
     def __unicode__(self):
         return unicode(self.name)
