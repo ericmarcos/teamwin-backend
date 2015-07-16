@@ -119,6 +119,11 @@ STATICFILES_DIRS = (
     os.environ.get('PROJECT_HOME', '') + '/static/',
 )
 
+#CELERY
+REDIS_URL = os.environ.get('REDISTOGO_URL', os.environ.get('REDIS_URL', 'redis://localhost:6379'))
+
+CELERY_TIMEZONE = 'UTC'
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 # SOCIAL AUTH
 

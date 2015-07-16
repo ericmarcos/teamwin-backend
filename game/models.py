@@ -3,6 +3,7 @@
 
 from operator import itemgetter
 
+from celery import shared_task
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum, Count, Q, F, When, Case, Value, Prefetch
@@ -142,6 +143,20 @@ class Pool(models.Model):
     pool_type = models.CharField(max_length=64, blank=True, null=True, choices=TYPE_CHOICES, default=TYPE_QUINIELA)
     public = models.BooleanField(default=True)
 
+    def save(self, *args, **kwargs):
+        super(Team, self).save(*args, **kwargs)
+        self.publish_pool.apply_async([self.id], eta=self.publishing_date)
+        self.close_pool.apply_async([self.id], eta=self.closing_date)
+
+    @staticmethod
+    @shared_task
+    def publish_pool(pool_id):
+        try:
+            p = Pool.objects.get(id=pool_id)
+            p.publish()
+        except Exception as e:
+            print e
+
     def publish(self):
         if self.state == self.STATE_DRAFT:
             self.state = self.STATE_OPEN
@@ -168,6 +183,15 @@ class Pool(models.Model):
                     m.save()
         else:
             raise CantPlayPool(self)
+
+    @staticmethod
+    @shared_task
+    def close_pool(pool_id):
+        try:
+            p = Pool.objects.get(id=pool_id)
+            p.close()
+        except Exception as e:
+            print e
 
     def close(self):
         if self.state == self.STATE_OPEN:
