@@ -5,6 +5,7 @@ from .models import *
 class PoolResultInline(admin.StackedInline):
     model = PoolResult
     extra = 0
+    readonly_fields = ('is_winner',)
 
 
 class PoolOptionInline(admin.StackedInline):
