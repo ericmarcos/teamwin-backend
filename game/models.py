@@ -105,10 +105,12 @@ class PoolQuerySet(models.QuerySet):
         return self.filter(results__players=player).distinct()
 
     def pending(self, player):
-        return self.open().filter(fixtures__league__teams__players=player).exclude(results__players=player).distinct()
+        f = Fixture.objects.current().filter(league__teams__players=player)
+        return self.open().filter(fixtures=f).exclude(results__players=player).distinct()
 
     def current(self, player):
-        return self.open().filter(fixtures__league__teams__players=player).distinct()
+        f = Fixture.objects.current().filter(league__teams__players=player)
+        return self.open().filter(fixtures=f).distinct()
 
 
 class Pool(models.Model):
