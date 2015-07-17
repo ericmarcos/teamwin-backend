@@ -171,6 +171,18 @@ class Pool(models.Model):
         else:
             raise InvalidPoolTransition(self.state, self.STATE_OPEN)
 
+    def is_draft(self):
+        return self.state == self.STATE_DRAFT
+
+    def is_open(self):
+        return self.state == self.STATE_OPEN
+
+    def is_closed(self):
+        return self.state == self.STATE_CLOSED
+
+    def is_set(self):
+        return self.state == self.STATE_SET
+
     def play(self, player, result):
         if self.state == self.STATE_OPEN:
             if not result:
