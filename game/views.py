@@ -10,6 +10,12 @@ from .models import *
 from .permissions import *
 from .serializers import *
 
+from rest_framework.authentication import SessionAuthentication
+
+class CSRFExcemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return
+
 
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated,]
@@ -172,7 +178,7 @@ class PoolViewSet(viewsets.ModelViewSet):
             raise ParseError(detail=str(e))
         return Response({'status': 'Result %s played for pool %s' % (result, pool)})
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], authentication_classes=[CSRFExcemptSessionAuthentication])
     def set(self, request, pk=None):
         pool = self.get_object()
         try:

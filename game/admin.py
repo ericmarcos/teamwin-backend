@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import *
 
 
@@ -15,6 +16,24 @@ class PoolOptionInline(admin.StackedInline):
 
 class PoolAdmin(admin.ModelAdmin):
     inlines = [PoolResultInline, PoolOptionInline, ]
+    def button(self, obj):
+        if not obj.is_set():
+            html =  ('<button type="button" onclick="set_pool({0}, \'1\');">1</button>'
+                     '<button type="button" onclick="set_pool({0}, \'X\');">X</button>'
+                     '<button type="button" onclick="set_pool({0}, \'2\');">2</button>')
+            html = html.format(obj.id)
+        else:
+            w = obj.winner_result()
+            html = 'Winner result: <strong>{0}</strong>'.format(w.name if w else None)
+        return format_html(html)
+    button.short_description = 'Winner result'
+    button.allow_tags = True
+    class Media:
+        js = (
+            'admin/js/set_pool.js',   # app static folder
+        )
+
+    list_display=('title', 'button')
 
 
 class MembershipInline(admin.StackedInline):
