@@ -146,9 +146,11 @@ class Pool(models.Model):
     public = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        super(Team, self).save(*args, **kwargs)
-        self.publish_pool.apply_async([self.id], eta=self.publishing_date)
-        self.close_pool.apply_async([self.id], eta=self.closing_date)
+        super(Pool, self).save(*args, **kwargs)
+        if self.publishing_date:
+            self.publish_pool.apply_async([self.id], eta=self.publishing_date)
+        if self.closing_date:
+            self.close_pool.apply_async([self.id], eta=self.closing_date)
 
     @staticmethod
     @shared_task
