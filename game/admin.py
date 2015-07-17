@@ -16,6 +16,7 @@ class PoolOptionInline(admin.StackedInline):
 
 class PoolAdmin(admin.ModelAdmin):
     inlines = [PoolResultInline, PoolOptionInline, ]
+
     def button(self, obj):
         if not obj.is_set():
             html =  ('<button type="button" onclick="set_pool({0}, \'1\');">1</button>'
@@ -28,12 +29,23 @@ class PoolAdmin(admin.ModelAdmin):
         return format_html(html)
     button.short_description = 'Winner result'
     button.allow_tags = True
+
+    def fixture(self, obj):
+        return obj.fixtures.first()
+
+    def league(self, obj):
+        try:
+            return obj.fixtures.first().league.name
+        except:
+            return None
+
+    list_display=('title', 'fixture', 'league', 'state', 'button')
+    list_filter = ('state', 'fixtures__league')
+
     class Media:
         js = (
             'admin/js/set_pool.js',   # app static folder
         )
-
-    list_display=('title', 'button')
 
 
 class MembershipInline(admin.StackedInline):
