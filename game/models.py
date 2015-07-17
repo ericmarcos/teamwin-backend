@@ -151,7 +151,7 @@ class Pool(models.Model):
         if self.pk:
             prev_pool = Pool.objects.get(pk=self.pk)
         super(Pool, self).save(*args, **kwargs)
-        if self.pk and self.publishing_date and (not prev_pool self.publishing_date != prev_pool.publishing_date):
+        if self.pk and self.publishing_date and (not prev_pool or self.publishing_date != prev_pool.publishing_date):
             self.publish_pool.apply_async([self.id], eta=self.publishing_date)
         if self.pk and self.closing_date and (not prev_pool or self.closing_date != prev_pool.closing_date):
             self.close_pool.apply_async([self.id], eta=self.closing_date)
