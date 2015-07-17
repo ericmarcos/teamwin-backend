@@ -144,6 +144,7 @@ class Pool(models.Model):
     state = models.CharField(max_length=64, blank=True, null=True, choices=STATE_CHOICES, default=STATE_DRAFT)
     pool_type = models.CharField(max_length=64, blank=True, null=True, choices=TYPE_CHOICES, default=TYPE_QUINIELA)
     public = models.BooleanField(default=True)
+    fixtures = models.ManyToManyField('Fixture', blank=True, related_name='pools')
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -601,7 +602,6 @@ class Fixture(models.Model):
     objects = FixtureQuerySet.as_manager()
 
     league = models.ForeignKey(League, blank=True, null=True, related_name='fixtures')
-    pools = models.ManyToManyField(Pool, blank=True, related_name='fixtures')
     name = models.CharField(max_length=255, blank=True, null=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
