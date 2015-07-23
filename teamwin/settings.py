@@ -71,7 +71,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'dareyoo2.urls'
+ROOT_URLCONF = 'teamwin.urls'
 
 TEMPLATES = [
     {
