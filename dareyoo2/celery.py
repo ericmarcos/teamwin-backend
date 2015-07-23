@@ -8,11 +8,11 @@ from celery import Celery
 from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dareyoo2.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'teamwin.settings')
 
 #REDIS_URL = os.environ.get('REDISTOGO_URL', 'redis://localhost')
 
-app = Celery('dareyoo2', broker=settings.REDIS_URL)
+app = Celery('teamwin', broker=settings.REDIS_URL)
 
 redis = redis.from_url(settings.REDIS_URL)
 

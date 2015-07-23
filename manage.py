@@ -11,7 +11,7 @@ else:
     readline.parse_and_bind("tab: complete")
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dareyoo2.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "teamwin.settings")
 
     from django.core.management import execute_from_command_line
 
