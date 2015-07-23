@@ -249,7 +249,7 @@ class Pool(models.Model):
         return []
 
     def winner_result(self):
-        return PoolResult.objects.filter(is_winner=True).first()
+        return self.results.filter(is_winner=True).first()
 
     def __unicode__(self):
         return unicode(self.title)
