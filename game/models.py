@@ -110,7 +110,7 @@ class PoolQuerySet(models.QuerySet):
 
     def current(self, player):
         f = Fixture.objects.current().filter(league__teams__players=player)
-        return self.open().filter(fixtures=f).distinct()
+        return self.filter(fixtures=f).distinct()
 
 
 class Pool(models.Model):
