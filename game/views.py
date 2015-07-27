@@ -159,14 +159,14 @@ class PoolViewSet(viewsets.ModelViewSet):
 
     
     def get_queryset(self):
-        if self.request.query_params.get('pending', self.request.data.get('pending')):
-            return Pool.objects.pending(self.request.user)
-        elif self.request.query_params.get('played', self.request.data.get('played')):
-            return Pool.objects.played(self.request.user)
-        elif self.request.query_params.get('current', self.request.data.get('current')):
-            return Pool.objects.current(self.request.user)
-        else:
-            return Pool.objects.public()
+        if self.request.user.is_authenticated():
+            if self.request.query_params.get('pending', self.request.data.get('pending')):
+                return Pool.objects.pending(self.request.user)
+            elif self.request.query_params.get('played', self.request.data.get('played')):
+                return Pool.objects.played(self.request.user)
+            elif self.request.query_params.get('current', self.request.data.get('current')):
+                return Pool.objects.current(self.request.user)
+        return Pool.objects.public()
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated,])
     def play(self, request, pk=None):
