@@ -252,7 +252,12 @@ class Pool(models.Model):
         return self.results.filter(is_winner=True).first()
 
     def __unicode__(self):
-        return unicode(self.title)
+        if self.title:
+            return unicode(self.title)
+        options = list(self.options.all())
+        if len(options) > 0:
+            return " - ".join(map(unicode, options))
+        return "Pool %s" % self.id
 
     class Meta:
         app_label = 'game'
@@ -293,7 +298,12 @@ class PoolOption(models.Model):
             return ""
 
     def __unicode__(self):
-        return unicode(self.name)
+        if self.name:
+            return unicode(self.name)
+        try:
+            return unicode(self.item)
+        except:
+            return "PoolOption %s" % self.id
 
     class Meta:
         app_label = 'game'

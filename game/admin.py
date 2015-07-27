@@ -39,7 +39,7 @@ class PoolAdmin(admin.ModelAdmin):
         except:
             return None
 
-    list_display=('title', 'fixture', 'league', 'state', 'button')
+    list_display = ('id', '__unicode__', 'fixture', 'league', 'state', 'button')
     list_filter = ('state', 'fixtures__league')
 
     class Media:
