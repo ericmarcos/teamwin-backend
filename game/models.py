@@ -571,7 +571,7 @@ class League(models.Model):
 class Prize(models.Model):
     league = models.ForeignKey(League, blank=True, null=True, related_name='prizes')
     name = models.CharField(max_length=255, blank=True, null=True)
-    description = models.CharField(max_length=255, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     pic = models.ImageField(upload_to='prizes', null=True, blank=True)
     order = models.IntegerField(default=1)
 
