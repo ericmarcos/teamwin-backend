@@ -4,6 +4,7 @@ import base64
 import json
 
 import requests
+from celery import shared_task
 from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -37,12 +38,9 @@ def get_fb_friends(user):
     return []
 
 
-def send_push(users, text, payload=None):
-    tokens = []
-    if isinstance(users, collections.Iterable):
-        tokens = [u.devices.first().token for u in users if u.devices.first()]
-    elif users.devices.first():
-        tokens = [users.devices.first().token]
+@shared_task
+def send_push(users_ids, text, payload=None):
+    tokens = [d.token for d in Device.objects.filter(user_id__in=users_ids)]
     if tokens:
         post_data = {
             'tokens': tokens,

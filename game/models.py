@@ -397,15 +397,15 @@ class Team(models.Model):
         if created:
             if Membership.objects.filter(player=user).count() == 1:
                 payload = { "$state": "tab.team.detail.current", "$stateParams": "{\"teamId\": %s}" % self.id, "teamId": self.id }
-                send_push(self.captain(), u"%s se ha unido a tu equipo %s" % (user.username, self.name), payload)
+                send_push.delay([self.captain().id], u"%s se ha unido a tu equipo %s" % (user.username, self.name), payload)
             else:
                 m.state = m.STATE_WAITING_CAPTAIN
                 payload = { "$state": "tab.team.detail.current", "$stateParams": "{\"teamId\": %s}" % self.id, "teamId": self.id }
-                send_push(self.captain(), u"%s ha pedido unirse a tu equipo %s" % (user.username, self.name), payload)
+                send_push.delay([self.captain().id], u"%s ha pedido unirse a tu equipo %s" % (user.username, self.name), payload)
         elif m.state == m.STATE_WAITING_PLAYER:
             m.state = m.STATE_ACTIVE
             payload = { "$state": "tab.team.detail.current", "$stateParams": "{\"teamId\": %s}" % self.id, "teamId": self.id }
-            send_push(self.captain(), u"%s se ha unido a tu equipo %s" % (user.username, self.name), payload)
+            send_push.delay([self.captain().id], u"%s se ha unido a tu equipo %s" % (user.username, self.name), payload)
             for f in self.current_fixtures():
                 p = Pool.objects.filter(fixtures=f, results__players=user).count()
                 #If you join a team in the middle of a fixture, I won't count the winning pools
@@ -422,12 +422,12 @@ class Team(models.Model):
         if created:
             m.state = m.STATE_WAITING_PLAYER
             payload = { "$state": "tab.teams.waiting", "teamId": self.id }
-            send_push(user, u"¡%s, capitán del equipo %s, quiere ficharte!" % (self.captain().username, self.name), payload)
+            send_push.delay([user.id], u"¡%s, capitán del equipo %s, quiere ficharte!" % (self.captain().username, self.name), payload)
         elif m.state == m.STATE_WAITING_CAPTAIN:
             self.check_limits(user)
             m.state = m.STATE_ACTIVE
             payload = { "$state": "tab.team.detail.current", "$stateParams": "{\"teamId\": %s}" % self.id, "teamId": self.id }
-            send_push(user, u"¡Felicidades! %s, capitán del equipo %s, ha aceptado tu fichaje." % (self.captain().username, self.name), payload)
+            send_push.delay([user.id], u"¡Felicidades! %s, capitán del equipo %s, ha aceptado tu fichaje." % (self.captain().username, self.name), payload)
             for f in self.current_fixtures():
                 p = Pool.objects.filter(fixtures=f, results__players=user).count()
                 w = Pool.objects.filter(fixtures=f, results=PoolResult.objects.filter(players=user, is_winner=True)).count()
@@ -641,7 +641,7 @@ class Fixture(models.Model):
             if not f.pools.all().exclude(state=Pool.STATE_SET).exists():
                 w = f.get_winners()
                 payload = { "$state": "winner" }
-                send_push(w, u"¡Felicidades! Has ganado la %s de la %s." % (f.name, f.league.name), payload)
+                send_push.delay([w.id], u"¡Felicidades! Has ganado la %s de la %s." % (f.name, f.league.name), payload)
         except Exception as e:
             print e
 
