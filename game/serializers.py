@@ -228,6 +228,7 @@ class PrizeSerializer(serializers.HyperlinkedModelSerializer):
 class LeagueSerializer(serializers.HyperlinkedModelSerializer):
     pic = serializers.ReadOnlyField(source='get_pic_url')
     leaderboard = serializers.SerializerMethodField()
+    prev_leaderboard = serializers.SerializerMethodField()
     prizes = PrizeSerializer(many=True, read_only=True)
 
     def get_leaderboard(self, league):
@@ -235,6 +236,11 @@ class LeagueSerializer(serializers.HyperlinkedModelSerializer):
         leaderboard = league.leaderboard(user=user)
         return LeagueLeaderboardSerializer(leaderboard, many=True, context=self.context).data
 
+    def get_prev_leaderboard(self, league):
+        user = self.context['request'].user if self.context['request'].user.is_authenticated() else None
+        leaderboard = league.leaderboard(user=user, prev=1)
+        return LeagueLeaderboardSerializer(leaderboard, many=True, context=self.context).data
+
     class Meta:
         model = League
-        fields = ('url', 'id', 'name','pic','description','leaderboard', 'prizes',)
+        fields = ('url', 'id', 'name','pic','description','leaderboard','prev_leaderboard', 'prizes',)
