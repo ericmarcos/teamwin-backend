@@ -254,7 +254,7 @@ class Pool(models.Model):
     def __unicode__(self):
         if self.title:
             return unicode(self.title)
-        options = list(self.options.all().reverse())
+        options = list(self.options.all())
         if len(options) > 0:
             return " - ".join(map(unicode, options))
         return "Pool %s" % self.id
@@ -307,6 +307,7 @@ class PoolOption(models.Model):
 
     class Meta:
         app_label = 'game'
+        ordering = ['id',]
 
 
 class PoolResult(models.Model):
