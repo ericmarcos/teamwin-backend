@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 from django.contrib.auth import get_user_model
 
-from .models import get_user_points, get_user_played, get_user_did_share
+from .models import get_user_points, get_user_played, get_user_extra_points
 
 
 class GameConfig(AppConfig):
@@ -11,4 +11,4 @@ class GameConfig(AppConfig):
         u = get_user_model()
         u.points = property(get_user_points)
         u.played = property(get_user_played)
-        u.did_share = property(get_user_did_share)
+        u.extra_points = property(get_user_extra_points)

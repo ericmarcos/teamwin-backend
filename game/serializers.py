@@ -142,14 +142,14 @@ class TeamLeaderboardSerializer(serializers.ModelSerializer):
     pic = serializers.SerializerMethodField()
     points = serializers.IntegerField()
     played = serializers.IntegerField()
-    did_share = serializers.BooleanField()
+    extra_points = serializers.BooleanField()
 
     def get_pic(self, user):
         return user.profile.get_profile_pic_url()
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username','pic', 'points', 'played', 'did_share', 'first_name')
+        fields = ('id', 'username','pic', 'points', 'played', 'extra_points', 'first_name')
 
 
 class TeamLeagueSerializer(serializers.ModelSerializer):

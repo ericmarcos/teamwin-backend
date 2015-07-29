@@ -69,9 +69,9 @@ def get_user_played(user):
         return user.match[0].played
     return 0
 
-def get_user_did_share(user):
+def get_user_extra_points(user):
     if hasattr(user, 'match') and len(user.match) > 0:
-        return user.match[0].did_share
+        return user.match[0].extra_points
     return 0
 
 
@@ -503,11 +503,9 @@ class League(models.Model):
     visible = models.BooleanField(default=True)
 
     def current_fixture(self):
-        now = timezone.now()
         return self.fixtures.current().first()
 
     def prev_fixture(self, prev=1):
-        now = timezone.now()
         return self.fixtures.prev(prev).first()
 
     def team_leaderboard(self, team, prev=0, fixture=None):
@@ -669,7 +667,7 @@ class Match(models.Model):
     player = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name='matches')
     played = models.IntegerField(default=0) #Number of pools played
     score = models.IntegerField(default=0)
-    did_share = models.BooleanField(default=False)
+    extra_points = models.BooleanField(default=False)
 
     def __unicode__(self):
         return "%s - %s - %s: %s" % (unicode(self.player), unicode(self.team), unicode(self.fixture), unicode(self.score))

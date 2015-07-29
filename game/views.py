@@ -216,3 +216,12 @@ class LeagueViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ParseError(detail=str(e))
         return Response({'status': 'Team %s left the league %s' % (team_id, league)})
+
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated,])
+    def extra_points(self, request, pk=None):
+        league = self.get_object()
+        try:
+            Match.objects.filter(fixture=league.current_fixture(), player=request.user).update(extra_points=True)
+        except Exception as e:
+            raise ParseError(detail=str(e))
+        return Response({'status': 'User won +2 extra points'})
