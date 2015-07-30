@@ -243,7 +243,7 @@ class LeagueViewSet(viewsets.ModelViewSet):
     def extra_points(self, request, pk=None):
         league = self.get_object()
         try:
-            Match.objects.filter(fixture=league.current_fixture(), player=request.user).update(extra_points=True)
+            league.extra_points(request.user)
         except Exception as e:
             raise ParseError(detail=str(e))
         return Response({'status': 'User won +2 extra points'})
