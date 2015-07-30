@@ -568,7 +568,7 @@ class League(models.Model):
         Match.objects.filter(fixture=self.current_fixture(), player=player).update(extra_points=True, score=F('score') + 2)
 
     def pools(self, prev=0):
-        return Pool.objects.filter(fixture=self.fixtures.prev(prev))
+        return Pool.objects.filter(fixtures=self.fixtures.prev(prev))
 
 
     def get_pic_url(self):
