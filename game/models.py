@@ -261,6 +261,7 @@ class Pool(models.Model):
 
     class Meta:
         app_label = 'game'
+        ordering = ['-closing_date',]
 
 
 class Item(models.Model):
