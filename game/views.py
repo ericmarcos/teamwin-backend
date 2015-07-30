@@ -1,10 +1,13 @@
+import time
+import boto
+from boto.file.key import Key
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
-
+from django.conf import settings
 from users.models import *
 from .models import *
 from .permissions import *
@@ -48,6 +51,25 @@ class UserViewSet(viewsets.ModelViewSet):
                 elif device.token != device_token:
                     Device.objects.filter(user=request.user).update(token=device_token)
             return Response(UserFullSerializer(request.user).data)
+
+    @list_route(methods=['POST'])
+    def share_results(self, request, pk=None):
+        #http://stackoverflow.com/questions/14346065/upload-image-available-at-public-url-to-s3-using-boto
+        try:
+            conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+            bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+            bucket = conn.get_bucket(bucket_name)
+            key_name = "app_shares/%s_results_%s.png" % (int(time.time()), request.user.id)
+            k = bucket.new_key(key_name)
+            k.set_contents_from_file(request.FILES['results'], {"Content-Type": 'image/png'})
+            k.make_public()
+            http_url = 'http://{bucket}.{host}/{key}'.format(
+                host=conn.server_name(),
+                bucket=bucket_name,
+                key=key_name)
+            return Response({"url": http_url})
+        except Exception as e:
+            raise ParseError(detail=str(e))
 
 
 class TeamViewSet(viewsets.ModelViewSet):
