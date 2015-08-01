@@ -243,7 +243,9 @@ class LeagueViewSet(viewsets.ModelViewSet):
     def extra_points(self, request, pk=None):
         league = self.get_object()
         try:
-            league.extra_points(request.user, request.data.get('type'), request.data.get('data'))
+            etype = request.query_params.get('type', request.data.get('type'))
+            edata = request.query_params.get('data', request.data.get('data'))
+            league.extra_points(request.user, etype, edata)
         except Exception as e:
             raise ParseError(detail=str(e))
         return Response({'status': 'User won +2 extra points'})
