@@ -565,8 +565,14 @@ class League(models.Model):
         if f:
             Match.objects.filter(fixture=f, team=t).delete()
 
-    def extra_points(self, player):
-        Match.objects.filter(fixture=self.current_fixture(), player=player).update(extra_points=True, score=F('score') + 2)
+    def extra_points(self, player, etype, data=None):
+        Match.objects.filter(fixture=self.current_fixture(), player=player).update(
+            score=F('score') + 2,
+            extra_points=True,
+            extra_type=etype,
+            extra_data=data,
+            extra_date=timezone.now()
+        )
 
     def pools(self, prev=0):
         return Pool.objects.filter(fixtures=self.fixtures.prev(prev))
@@ -670,12 +676,29 @@ class Fixture(models.Model):
 
 
 class Match(models.Model):
+    EXTRA_TYPE_SHARE_FB = 'extra_type_share_fb'
+    EXTRA_TYPE_RATE = 'extra_type_rate'
+    EXTRA_TYPE_FEEDBACK = 'extra_type_feedback'
+    EXTRA_TYPE_AD = 'extra_type_ad'
+    EXTRA_TYPE_VISIT = 'extra_type_visit'
+    EXTRA_TYPE_DOWNLOAD = 'extra_type_download'
+    EXTRA_TYPE_CHOICES = (
+        (EXTRA_TYPE_SHARE_FB, 'Share Facebook'),
+        (EXTRA_TYPE_RATE, 'Rate'),
+        (EXTRA_TYPE_FEEDBACK, 'Feedback'),
+        (EXTRA_TYPE_AD, 'Watch Ad'),
+        (EXTRA_TYPE_VISIT, 'Visit Website'),
+        (EXTRA_TYPE_DOWNLOAD, 'Download'),
+    )
     fixture = models.ForeignKey(Fixture, blank=True, null=True, related_name='matches')
     team = models.ForeignKey(Team, blank=True, null=True, related_name='matches')
     player = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, related_name='matches')
     played = models.IntegerField(default=0) #Number of pools played
     score = models.IntegerField(default=0)
     extra_points = models.BooleanField(default=False)
+    extra_type = models.CharField(max_length=255, blank=True, null=True, choices=EXTRA_TYPE_CHOICES)
+    extra_data = models.TextField(blank=True, null=True)
+    extra_date = models.DateTimeField(blank=True, null=True)
 
     def __unicode__(self):
         return "%s - %s - %s: %s" % (unicode(self.player), unicode(self.team), unicode(self.fixture), unicode(self.score))
