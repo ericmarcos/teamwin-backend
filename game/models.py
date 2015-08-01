@@ -566,7 +566,7 @@ class League(models.Model):
             Match.objects.filter(fixture=f, team=t).delete()
 
     def extra_points(self, player, etype, data=None):
-        Match.objects.filter(fixture=self.current_fixture(), player=player).update(
+        Match.objects.filter(fixture=self.current_fixture(), player=player, extra_points=False).update(
             score=F('score') + 2,
             extra_points=True,
             extra_type=etype,
