@@ -40,10 +40,10 @@ def save_friends(backend, user, response, *args, **kwargs):
         try:
             friends = get_fb_friends(user)
             user.profile.add_friend(friends)
-            if user.profile.gender == 'male':
-                msg = 'Tu amigo %s acaba de unirse a Teamwin.' % (user.first_name or user.username)
-            else:
+            if user.profile.gender == 'female' or user.profile.gender == 'mujer':
                 msg = 'Tu amiga %s acaba de unirse a Teamwin.' % (user.first_name or user.username)
+            else:
+                msg = 'Tu amigo %s acaba de unirse a Teamwin.' % (user.first_name or user.username)
             send_push.delay([f.id for f in friends], msg)
         except Exception as e:
             pass
