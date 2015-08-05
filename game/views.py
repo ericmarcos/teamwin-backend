@@ -41,8 +41,7 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             ionic_id = request.data.get('ionic_id')
             if ionic_id:
-                request.user.ionic_id = ionic_id
-                request.user.save()
+                DareyooUserProfile.objects.filter(user=request.user).update(ionic_id=ionic_id)
             device_token = request.data.get('device_token')
             device = request.user.devices.first()
             if device_token:

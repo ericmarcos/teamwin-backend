@@ -16,7 +16,7 @@ def save_profile(backend, user, response, *args, **kwargs):
         user.profile.gender = response.get('gender')
         user.profile.locale = response.get('locale')
         user.profile.location = response.get('location')
-        user.profile.timezone = str(response.get('timezone'))
+        user.profile.timezone = response.get('timezone')
         user.profile.save()
 
 
