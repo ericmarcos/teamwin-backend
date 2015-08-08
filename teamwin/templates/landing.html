@@ -1,0 +1,198 @@
+{% load i18n %}<!DOCTYPE html>
+{% block html %}<html lang="es">{% endblock %}
+<head>
+{% block head %}
+  {% block meta %}
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% block meta_desc %}<meta name="description" content="Teamwin es una aplicación donde se unen los pronósticos deportivos, la estrategia en equipo y la suerte. Puedes crear tu propio equipo y fichar a tus amigos o unirte a un equipo que ya esté en Teamwin. Participa cada semana pronosticando los resultados para conseguir el premio que sólo se concede al mejor de los mejores, una Amazon Card por valor de 50€. Para jugar arrastra el dedo hacia el lado del equipo por el que apuestas haciendo swipe al más puro estilo Tinder. Cada vez que aciertas un resultado sumas puntos para tus equipos los cuales compiten en el ranking general contra todos los demás para llegar a lo más alto. Para ganar el premio deberás ser el jugador con más aciertos en el equipo que queda primero en el ranking. Participar es totalmente gratis, simplemente registrate y ¡empieza a jugar!" />{% endblock %}
+  <meta name="keywords" content="juego de futbol,porras gratis,equipos liga bbva,ganar premios,pronosticos deportivos,quiniela">
+  <meta name="author" content="Dareyoo Gaming S.L.">
+
+  <!-- FAVICONS -->
+  <link rel="apple-touch-icon" sizes="57x57" href="{{STATIC_URL}}favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="{{STATIC_URL}}favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="{{STATIC_URL}}favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="{{STATIC_URL}}favicons/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="{{STATIC_URL}}favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="{{STATIC_URL}}favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="{{STATIC_URL}}favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="{{STATIC_URL}}favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{STATIC_URL}}favicons/apple-touch-icon-180x180.png">
+  <link rel="icon" type="image/png" href="{{STATIC_URL}}favicons/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="{{STATIC_URL}}favicons/android-chrome-192x192.png" sizes="192x192">
+  <link rel="icon" type="image/png" href="{{STATIC_URL}}favicons/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/png" href="{{STATIC_URL}}favicons/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="{{STATIC_URL}}favicons/manifest.json">
+  <meta name="msapplication-TileColor" content="#b91d47">
+  <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+  <meta name="theme-color" content="#ffffff">
+  <!-- END FAVICONS -->
+
+  {% endblock %}
+  {% block title %}<title>Teamwin</title>{% endblock %}
+  {% block css %}
+  <link href='http://fonts.googleapis.com/css?family=Asap' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Dosis' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+  <style type="text/css">
+
+  html { height: 100%; }
+  body {
+    height: 100%;
+    background: url('{{STATIC_URL}}landing/background.jpg') center center no-repeat;
+    background-size: cover;
+
+    min-height: 500px;
+  }
+  .container {
+    padding-top: 30px;
+    max-width: 900px;
+    height: 100%;
+  }
+  .centerer {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .main-row {
+    height: 100%;
+    min-height: 500px;
+  }
+  .logo {
+    margin-top: 30px;
+  }
+  h1 {
+    margin: 40px auto;
+    font-family: 'Asap';
+    font-size: 21px;
+    color: #fff;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.75);
+  }
+  .png-shadow {
+    -webkit-filter: drop-shadow(2px 2px 8px rgba(0,0,0,0.75));
+    filter: url(#drop-shadow);
+    -ms-filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=2, OffY=2, Color='#444')";
+    filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=2, OffY=2, Color='#444')";
+  }
+  .google_play_btn {
+    margin-left: 8px;
+  }
+  .screens {
+    float: right;
+  }
+  .prize {
+    position: absolute;
+    bottom: 52px;
+    left: 78px;
+    z-index: 2;
+  }
+  .amazon-card {
+    position: absolute;
+    bottom: 0px;
+    left: -20px;
+  }
+  .footer {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    height: 40px;
+    background-color: #242527;
+  }
+  .footer h2 {
+    margin: 8px;
+    font-size: 15px;
+    font-family: 'Dosis', sans-serif;
+    color: #fff;
+    text-align: center;
+  }
+  .yellow {
+    color: #ffdc00;
+  }
+  .red {
+    color: #fb4c4c;
+  }
+
+  </style>
+
+  {% endblock %}
+  {% block googleanalytics %}
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-40904039-2', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+  {% endblock %}
+{% endblock %}
+</head>
+{% block body %}<body>{% endblock %}
+{% block top_body %}
+{% endblock %}
+  {% block navbar %}
+  {% endblock %}
+  {% block content %}
+
+  <div class="container">
+    <div class="centerer">
+    <div class="row main-row">
+      <div class="col-md-6">
+        <img class="logo" src="{{STATIC_URL}}landing/logo_white.png" width="195">
+        <h1>Pronostica resultados deportivos con tus amigos y consigue fantásticos premios.</h1>
+        <a class="app_store_btn png-shadow" href="https://www.google.com/?referrer={{request.GET.utm_medium}}_{{request.GET.utm_source}}_{{request.GET.utm_campaign}}">
+          <img src="{{STATIC_URL}}landing/app_store.png" width="135">
+        </a>
+        <a class="google_play_btn png-shadow" href="https://www.google.com/?referrer={{request.GET.utm_medium}}_{{request.GET.utm_source}}_{{request.GET.utm_campaign}}">
+          <img src="{{STATIC_URL}}landing/google_play.png" width="135">
+        </a>
+      </div>
+      <div class="col-md-6">
+        <img class="screens" src="{{STATIC_URL}}landing/screens.png" width="214">
+        <img class="prize" src="{{STATIC_URL}}landing/prize.png" width="125">
+        <img class="amazon-card" src="{{STATIC_URL}}landing/amazon_card.png" width="168">
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <h2>YA DISPONIBLE&nbsp;&nbsp;&nbsp;<span class="yellow">LIGA BBVA CON UN PREMIO DE 50€ CADA SEMANA PARA AMAZON.ES</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRÓXIMAMENTE&nbsp;&nbsp;&nbsp;<span class="red">CHAMPIONS LEAGUE, NBA, LIGA ENDESA</span></h2>
+  </div>
+
+  <svg height="0" xmlns="http://www.w3.org/2000/svg">
+    <filter id="drop-shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feFlood flood-color="rgba(0,0,0,0.75)"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </svg>
+
+  {% endblock %}
+  {% block footer %}{% endblock %}
+  {% block js %}
+  <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script type="text/javascript">
+    $(function(){
+      if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        $('.google_play_btn').hide();
+      } else if(/Android/i.test(navigator.userAgent)) {
+        $('.app_store_btn').hide();
+      }
+    });
+  </script>
+  {% endblock %}
+</body>
+</html>
