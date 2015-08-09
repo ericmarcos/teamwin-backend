@@ -42,20 +42,21 @@
   html { height: 100%; }
   body {
     height: 100%;
+    min-height: 500px;
     background: url('{{STATIC_URL}}landing/background.jpg') center center no-repeat;
     background-size: cover;
-
-    min-height: 500px;
   }
   .container {
     padding-top: 30px;
     max-width: 900px;
     height: 100%;
   }
-  .centerer {
-    position: relative;
-    top: 50%;
-    transform: translateY(-50%);
+  @media (min-width: 768px) {
+    .centerer {
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+    }
   }
   .main-row {
     height: 100%;
@@ -104,6 +105,7 @@
   }
   .footer h2 {
     margin: 8px;
+    padding-top: 4px;
     font-size: 15px;
     font-family: 'Dosis', sans-serif;
     color: #fff;
@@ -114,6 +116,47 @@
   }
   .red {
     color: #fb4c4c;
+  }
+  @media (max-width: 768px) {
+    html, body, .container {
+      height: auto !important;
+    }
+    body {
+      background: url('{{STATIC_URL}}landing/background_mobile.jpg') center center no-repeat;
+    }
+    .col-sm-6 {
+      text-align: center;
+    }
+    h1 {
+      width: 80%;
+      text-align: center;
+    }
+    .screens {
+      float: none !important;
+      margin-top: 80px;
+    }
+    .prize {
+      top: 30px !important;
+      left: 50% !important;
+    }
+    .amazon-card {
+      display: none;
+    }
+    .footer {
+      position: relative !important;
+      height: auto !important;
+    }
+    .yellow, .red {
+      display: block;
+      margin-bottom: 30px;
+    }
+    .separator {
+      display: none !important;
+    }
+    h2 {
+      margin: 0px !important;
+      padding: 30px 30px 0px;
+    }
   }
 
   </style>
@@ -142,28 +185,27 @@
 
   <div class="container">
     <div class="centerer">
-    <div class="row main-row">
-      <div class="col-md-6">
-        <img class="logo" src="{{STATIC_URL}}landing/logo_white.png" width="195">
-        <h1>Pronostica resultados deportivos con tus amigos y consigue fantásticos premios.</h1>
-        <a class="app_store_btn png-shadow" href="https://appstore.com/teamwin?referrer={{request.GET.utm_medium}}_{{request.GET.utm_source}}_{{request.GET.utm_campaign}}">
-          <img src="{{STATIC_URL}}landing/app_store.png" width="135">
-        </a>
-        <a class="google_play_btn png-shadow" href="https://play.google.com/store/apps/details?id=com.dareyoo.teamwin&referrer={{request.GET.utm_medium}}_{{request.GET.utm_source}}_{{request.GET.utm_campaign}}">
-          <img src="{{STATIC_URL}}landing/google_play.png" width="135">
-        </a>
+      <div class="row main-row">
+        <div class="col-sm-6">
+          <img class="logo" src="{{STATIC_URL}}landing/logo_white.png" width="195">
+          <h1>Pronostica resultados deportivos con tus amigos y consigue fantásticos premios.</h1>
+          <a class="app_store_btn png-shadow" href="https://appstore.com/teamwin?referrer={{request.GET.utm_medium}}_{{request.GET.utm_source}}_{{request.GET.utm_campaign}}">
+            <img src="{{STATIC_URL}}landing/app_store.png" width="135">
+          </a>
+          <a class="google_play_btn png-shadow" href="https://play.google.com/store/apps/details?id=com.dareyoo.teamwin&referrer={{request.GET.utm_medium}}_{{request.GET.utm_source}}_{{request.GET.utm_campaign}}">
+            <img src="{{STATIC_URL}}landing/google_play.png" width="135">
+          </a>
+        </div>
+        <div class="col-sm-6">
+          <img class="screens" src="{{STATIC_URL}}landing/screens.png" width="214">
+          <img class="prize" src="{{STATIC_URL}}landing/prize.png" width="125">
+          <img class="amazon-card" src="{{STATIC_URL}}landing/amazon_card.png" width="168">
+        </div>
       </div>
-      <div class="col-md-6">
-        <img class="screens" src="{{STATIC_URL}}landing/screens.png" width="214">
-        <img class="prize" src="{{STATIC_URL}}landing/prize.png" width="125">
-        <img class="amazon-card" src="{{STATIC_URL}}landing/amazon_card.png" width="168">
-      </div>
-    </div>
     </div>
   </div>
-
   <div class="footer">
-    <h2>YA DISPONIBLE&nbsp;&nbsp;&nbsp;<span class="yellow">LIGA BBVA CON UN PREMIO DE 50€ CADA SEMANA PARA AMAZON.ES</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PRÓXIMAMENTE&nbsp;&nbsp;&nbsp;<span class="red">CHAMPIONS LEAGUE, NBA, LIGA ENDESA</span></h2>
+    <h2>YA DISPONIBLE&nbsp;&nbsp;&nbsp;<span class="yellow">LIGA BBVA CON UN PREMIO DE 50€ CADA SEMANA PARA AMAZON.ES</span><span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>PRÓXIMAMENTE&nbsp;&nbsp;&nbsp;<span class="red">CHAMPIONS LEAGUE, NBA, LIGA ENDESA</span></h2>
   </div>
 
   <svg height="0" xmlns="http://www.w3.org/2000/svg">
