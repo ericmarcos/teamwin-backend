@@ -166,6 +166,10 @@ SOCIAL_AUTH_FACEBOOK_SECRET = os.environ.get('FACEBOOK_API_SECRET')
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends']
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = ['username', 'first_name', 'middle_name', 'last_name', 'locale', 'gender', 'location', 'timezone']
 
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'fields': 'id,name,email,gender,locale,timezone,location', # needed starting from protocol v2.4
+}
+
 SOCIAL_AUTH_PIPELINE = (
     'social.pipeline.social_auth.social_details',
     'social.pipeline.social_auth.social_uid',
