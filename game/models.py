@@ -398,6 +398,8 @@ class Team(models.Model):
         m, created = Membership.objects.get_or_create(team=self, player=user)
         if created:
             if Membership.objects.filter(player=user).count() == 1:
+                user.profile.invited_by = self.captain()
+                user.profile.save()
                 payload = { "$state": "tab.team-detail.current", "$stateParams": "{\"teamId\": %s}" % self.id, "teamId": self.id }
                 send_push.delay([self.captain().id], u"%s se ha unido a tu equipo %s" % (user.username, self.name), payload)
             else:
