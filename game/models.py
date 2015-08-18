@@ -542,7 +542,7 @@ class League(models.Model):
         lb.extend([team for team in user_teams_points if team not in lb])
         #adding user teams that have no matches created yet (the last annotation removes them)
         lb.extend([team for team in user_teams if team not in lb])
-        return lb
+        return sorted(lb, key=lambda x: x.sum_points, reverse=True)
 
     def enroll(self, user, team_id):
         t = Team.objects.get(id=team_id)
