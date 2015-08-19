@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import time
 import boto
 from boto.file.key import Key
