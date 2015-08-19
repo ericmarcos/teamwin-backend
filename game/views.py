@@ -80,7 +80,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         return TeamSerializer
 
     def get_queryset(self):
-        if self.action in ['detail', 'request_enroll', 'sign']:
+        if self.action in ['detail', 'request_enroll', 'sign', 'search']:
             return Team.objects.all()
         if self.request.query_params.get('friends', self.request.data.get('friends')):
             try:
@@ -101,6 +101,15 @@ class TeamViewSet(viewsets.ModelViewSet):
             team.set_captain(self.request.user, check=False)
         except Exception as e:
             raise ParseError(detail=str(e))
+
+    @list_route(methods=['post'], permission_classes=[IsAuthenticated])
+    def search(self, request, pk=None):
+        qs = self.get_queryset()
+        name = request.query_params.get('name', None)
+        if name:
+            qs.filter(name__icontains=name)
+            return Response(TeamSerializer(qs, many=True).data)
+        return Response([])
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     def request_enroll(self, request, pk=None):
