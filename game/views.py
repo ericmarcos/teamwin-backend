@@ -109,8 +109,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         qs = self.get_queryset()
         name = request.query_params.get('name', request.data.get('name'))
         if name:
-            qs.filter(name__icontains=name)
-            return Response(TeamSerializer(qs, context={'request': request}).data)
+            qs = qs.filter(name__icontains=name)
+            return Response(TeamSerializer(qs, many=True, context={'request': request}).data)
         return Response([])
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
