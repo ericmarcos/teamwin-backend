@@ -104,12 +104,12 @@ class TeamViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ParseError(detail=str(e))
 
-    @list_route(methods=['post'], permission_classes=[IsAuthenticated])
+    @list_route(methods=['get'], permission_classes=[IsAuthenticated])
     def search(self, request, pk=None):
         qs = self.get_queryset()
         name = request.query_params.get('name', request.data.get('name'))
         if name:
-            qs = qs.filter(name__icontains=name)
+            qs = qs.filter(name__icontains=name)[:10]
             return Response(TeamSerializer(qs, many=True, context={'request': request}).data)
         return Response([])
 
