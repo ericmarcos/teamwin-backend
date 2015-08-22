@@ -75,6 +75,15 @@ class LeagueResourceTest(APITestCase):
         Team.objects.all().delete()
         self.client.force_authenticate(user=None)
 
+    def test_team_access(self):
+        t = Team.objects.create(name='Team1')
+        t.set_captain(self.user_1)
+
+        self.client.force_authenticate(user=self.user_2)
+        url = reverse('team-detail', args=(t.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_team_participation(self):
         t1 = Team.objects.create(name='t1')
         t1.set_captain(self.user_1)

@@ -82,7 +82,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         return TeamSerializer
 
     def get_queryset(self):
-        if self.action in ['detail', 'request_enroll', 'sign', 'search']:
+        if self.action in ['retrieve', 'request_enroll', 'sign', 'search']:
             return Team.objects.all()
         if self.request.query_params.get('friends', self.request.data.get('friends')):
             try:
