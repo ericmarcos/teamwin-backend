@@ -18,3 +18,4 @@ Pillow==2.8.1
 requests==2.6.2
 readline==6.2.4.1
 redis==2.10.3
+mailchimp==2.0

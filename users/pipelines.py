@@ -1,5 +1,6 @@
 import requests as r
-
+from celery import shared_task
+import mailchimp
 from django.core.files.base import ContentFile
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -47,3 +48,15 @@ def save_friends(backend, user, response, *args, **kwargs):
             send_push.delay([f.id for f in friends], msg)
         except Exception as e:
             pass
+
+@shared_task
+def register_email_mailchimp(user_id):
+    user = get_user_model().objects.get(id=user_id)
+    if user and user.email:
+        try:
+            m = mailchimp.Mailchimp(settings.MAILCHIMP_API_KEY)
+            list_id = settings.MAILCHIMP_LISTS.get('Teamwin')
+            merge_vars = {'FNAME': user.first_name, 'LNAME': user.last_name}
+            m.lists.subscribe(list_id, {'email': user.email}, merge_vars, double_optin=False)
+        except Exception as e:
+            print e

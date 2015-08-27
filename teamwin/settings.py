@@ -198,6 +198,13 @@ REST_FRAMEWORK = {
     )
 }
 
+# Mailchimp
+
+MAILCHIMP_API_KEY = os.environ.get('MAILCHIMP_API_KEY', '')
+MAILCHIMP_LISTS = {
+    'Teamwin': '92472f8790',
+}
+
 ### STORAGES ###
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
