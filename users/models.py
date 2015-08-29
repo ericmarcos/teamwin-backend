@@ -2,12 +2,13 @@ import collections
 import urllib2
 import base64
 import json
-
 import requests
 from celery import shared_task
 from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
+from datetime import timedelta
+from django.utils import timezone
 
 
 def get_default_profile_pic(user_id):
@@ -109,3 +110,45 @@ class Device(models.Model):
 
     def __unicode__(self):
         return "%s - %s" % (self.user.username, self.token)
+
+
+class UserActivation(models.Model):
+    LEVEL_LOGIN = 1
+    LEVEL_PARTICIPATE = 2
+    LEVEL_CREATE = 3
+    LEVEL_BUY = 4
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="activations", blank=True, null=True) 
+    timestamp = models.DateTimeField()
+    level = models.IntegerField(blank=True, null=True, default=1)
+
+    def __unicode__(self):
+        return "%s - %s - %s" % (self.timestamp, self.user.username, self.level)
+
+    @staticmethod
+    @shared_task
+    def new_activation(user, level=1, timestamp=None):
+        now = timestamp or timezone.now()
+        last_activation = user.activations.filter(level=level).order_by("-timestamp").first()
+        if not last_activation or last_activation.timestamp < now - timedelta(hours=1):
+            UserActivation.objects.create(user=user, timestamp=now, level=level)
+
+    @staticmethod
+    @shared_task
+    def login(user):
+        UserActivation.new_activation(user, UserActivation.LEVEL_LOGIN)
+    
+    @staticmethod
+    @shared_task
+    def participate(user):
+        UserActivation.new_activation(user, UserActivation.LEVEL_PARTICIPATE)
+
+    @staticmethod
+    @shared_task
+    def create(user):
+        UserActivation.new_activation(user, UserActivation.LEVEL_CREATE)
+
+    @staticmethod
+    @shared_task
+    def buy(user):
+        UserActivation.new_activation(user, UserActivation.LEVEL_BUY)
