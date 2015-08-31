@@ -38,7 +38,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @list_route(methods=['GET', 'POST'])
     def me(self, request, pk=None):
-        UserActivation.login.delay(request.user)
+        try:
+            UserActivation.login.delay(request.user)
+        except:
+            UserActivation.login(request.user)
         if request.method == 'GET':
             return Response(UserFullSerializer(request.user).data)
         else:
