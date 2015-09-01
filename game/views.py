@@ -89,6 +89,25 @@ class UserViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ParseError(detail=str(e))
 
+    @detail_route(methods=['GET'])
+    def match(self, request, pk=None):
+        try:
+            user = self.get_object()
+            league = League.objects.get(id=request.query_params.get('league_id'))
+            team = Team.objects.get(id=request.query_params.get('team_id'))
+            prev = request.query_params.get('prev')
+            if prev:
+                fixture = league.prev_fixture(prev=prev)
+            else:
+                fixture = league.current_fixture()
+            if fixture:
+                match = Match.objects.get(player=user, team=team, fixture=fixture)
+                return Response(MatchSerializer(match, context={'request': request}).data)
+            else:
+                raise ParseError(detail='Fixture not valid')
+        except Exception as e:
+            raise ParseError(detail=str(e))
+
 
 class TeamViewSet(viewsets.ModelViewSet):
     permission_classes = [TeamPermission,]

@@ -76,7 +76,8 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_user_result(self, pool):
         try:
-            return pool.results.filter(players=self.context['request'].user).first().name
+            user = self.context.get('user', self.context['request'].user)
+            return pool.results.filter(players=user).first().name
         except:
             return None
 
@@ -91,11 +92,30 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'id', 'title','created_at','closing_date','pool_type','public','state','options', 'league', 'fixture', 'user_result', 'result')
 
 
+class MatchSerializer(serializers.ModelSerializer):
+    pools = serializers.SerializerMethodField()
+
+    def get_pools(self, match):
+        try:
+            pools = match.fixture.pools.all()
+            ctx = self.context
+            ctx['user'] = match.player
+            return PoolSerializer(pools, many=True, context=ctx).data
+        except:
+            return []
+
+    class Meta:
+        model = Match
+        fields = ('id', 'extra_points', 'pools')
+
 class UserSerializer(serializers.ModelSerializer):
     pic = serializers.SerializerMethodField()
 
     def get_pic(self, user):
-        return user.profile.get_profile_pic_url()
+        try:
+            return user.profile.get_profile_pic_url()
+        except:
+            return ''
 
     class Meta:
         model = get_user_model()
