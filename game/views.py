@@ -76,6 +76,19 @@ class UserViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ParseError(detail=str(e))
 
+    @detail_route(methods=['POST'])
+    def add_friend(self, request, pk=None):
+        try:
+            user = self.get_object()
+            if request.user.is_authenticated() and request.user == user:
+                friend = get_user_model().objects.get(id=request.query_params.get('friend_id'))
+                user.profile.add_friend(friend)
+                return Response({"ok": '%s was added as your friend.'})
+            else:
+                raise ParseError(detail='User not valid')
+        except Exception as e:
+            raise ParseError(detail=str(e))
+
 
 class TeamViewSet(viewsets.ModelViewSet):
     permission_classes = [TeamPermission,]
