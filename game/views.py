@@ -140,9 +140,9 @@ class TeamViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ParseError(detail=str(e))
         try:
-            UserActivation.create.delay(request.user)
+            UserActivation.create.delay(self.request.user)
         except:
-            UserActivation.create(request.user)
+            UserActivation.create(self.request.user)
 
     @list_route(methods=['get'], permission_classes=[IsAuthenticated])
     def search(self, request, pk=None):
