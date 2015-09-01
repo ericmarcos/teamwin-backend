@@ -55,6 +55,7 @@ class MembershipInline(admin.StackedInline):
 
 class TeamAdmin(admin.ModelAdmin):
     inlines = [MembershipInline, ]
+    search_fields = ('name',)
 
 
 admin.site.register(Pool, PoolAdmin)
