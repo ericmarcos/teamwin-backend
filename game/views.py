@@ -103,11 +103,14 @@ class TeamViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         try:
             check_user_limits(self.request.user)
-            UserActivation.create.delay(self.request.user)
             team = serializer.save()
             team.set_captain(self.request.user, check=False)
         except Exception as e:
             raise ParseError(detail=str(e))
+        try:
+            UserActivation.create.delay(request.user)
+        except:
+            UserActivation.create(request.user)
 
     @list_route(methods=['get'], permission_classes=[IsAuthenticated])
     def search(self, request, pk=None):
@@ -128,9 +131,12 @@ class TeamViewSet(viewsets.ModelViewSet):
         team = self.get_object()
         try:
             enroll = team.request_enroll(request.user)
-            UserActivation.participate.delay(request.user)
         except Exception as e:
             raise ParseError(detail=str(e))
+        try:
+            UserActivation.participate.delay(request.user)
+        except:
+            UserActivation.participate(request.user)
         if enroll == Membership.STATE_ACTIVE:
             resp = 'Request accepted. Current state is "Active player"'
         elif enroll == Membership.STATE_WAITING_CAPTAIN:
@@ -151,9 +157,12 @@ class TeamViewSet(viewsets.ModelViewSet):
         user = get_user_model().objects.get(id=user_id)
         try:
             sign = team.sign(user)
-            UserActivation.participate.delay(request.user)
         except Exception as e:
             raise ParseError(detail=str(e))
+        try:
+            UserActivation.participate.delay(request.user)
+        except:
+            UserActivation.participate(request.user)
         if sign == Membership.STATE_ACTIVE:
             resp = 'Request accepted. Current state is "Active player"'
         elif sign == Membership.STATE_WAITING_PLAYER:
@@ -169,9 +178,12 @@ class TeamViewSet(viewsets.ModelViewSet):
         user = get_user_model().objects.get(id=user_id)
         try:
             team.fire(user)
-            UserActivation.participate.delay(request.user)
         except Exception as e:
             raise ParseError(detail=str(e))
+        try:
+            UserActivation.participate.delay(request.user)
+        except:
+            UserActivation.participate(request.user)
         return Response({'status': 'Player %s was fired' % user.id})
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
@@ -179,9 +191,12 @@ class TeamViewSet(viewsets.ModelViewSet):
         team = self.get_object()
         try:
             team.fire(request.user)
-            UserActivation.participate.delay(request.user)
         except Exception as e:
             raise ParseError(detail=str(e))
+        try:
+            UserActivation.participate.delay(request.user)
+        except:
+            UserActivation.participate(request.user)
         return Response({'status': 'You left the team %s' % team.id})
 
     @detail_route(methods=['post'])
@@ -215,9 +230,12 @@ class PoolViewSet(viewsets.ModelViewSet):
         try:
             result = request.query_params.get('result', request.data.get('result'))
             pool.play(request.user, result)
-            UserActivation.participate.delay(request.user)
         except Exception as e:
             raise ParseError(detail=str(e))
+        try:
+            UserActivation.participate.delay(request.user)
+        except:
+            UserActivation.participate(request.user)
         return Response({'status': 'Result %s played for pool %s' % (result, pool)})
 
     @detail_route(methods=['post'], authentication_classes=[CSRFExcemptSessionAuthentication])
