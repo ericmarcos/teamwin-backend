@@ -452,7 +452,7 @@ class Team(models.Model):
 
     def call_players(self, user, message):
         recipients = [u.id for u in self.players.all() if u != user]
-        send_push.delay(recipients, u"%s de %s: %s" % (user.username, self.name, message))
+        send_push.delay(recipients, u"%s de %s: %s" % (user.first_name, self.name, message))
         TeamPlayerMessage.objects.create(player=user, team=self, message=message)
 
     def current_fixtures(self):
