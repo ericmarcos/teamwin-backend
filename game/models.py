@@ -450,6 +450,11 @@ class Team(models.Model):
             Match.objects.filter(player=user, team=self, fixture=f).delete()
         return m.state
 
+    def call_players(self, user, message):
+        recipients = [u.id for u in self.players.all() if u != user]
+        send_push.delay(recipients, u"%s de %s: %s" % (user.username, self.name, message))
+        TeamPlayerMessage.objects.create(player=user, team=self, message=message)
+
     def current_fixtures(self):
         return [league.current_fixture() for league in self.leagues.all()]
 
@@ -464,6 +469,19 @@ class Team(models.Model):
 
     def __unicode__(self):
         return unicode(self.name)
+
+    class Meta:
+        app_label = 'game'
+
+
+class TeamPlayerMessage(models.Model):
+    player = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True)
+    team = models.ForeignKey(Team, blank=True, null=True)
+    message = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
+
+    def __unicode__(self):
+        return '%s - %s: %s' % (self.player, self.team, self.message)
 
     class Meta:
         app_label = 'game'

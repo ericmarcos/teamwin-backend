@@ -231,6 +231,21 @@ class TeamViewSet(viewsets.ModelViewSet):
             UserActivation.participate(request.user)
         return Response({'status': 'You left the team %s' % team.id})
 
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
+    def call_players(self, request, pk=None):
+        team = self.get_object()
+        try:
+            message = request.query_params.get('message')
+            if message:
+                team.call_players(request.user, message[:255])
+        except Exception as e:
+            raise ParseError(detail=str(e))
+        try:
+            UserActivation.participate.delay(request.user)
+        except:
+            UserActivation.participate(request.user)
+        return Response({'status': 'You left the team %s' % team.id})
+
     @detail_route(methods=['post'])
     def upload_avatar(self, request, *args, **kwargs):
         team = self.get_object()
