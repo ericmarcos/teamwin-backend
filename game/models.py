@@ -595,7 +595,7 @@ class League(models.Model):
         )
 
     def pools(self, prev=0):
-        return Pool.objects.filter(fixtures=self.fixtures.prev(prev))
+        return Pool.objects.filter(fixtures=self.fixtures.prev(prev).first())
 
 
     def get_pic_url(self):
