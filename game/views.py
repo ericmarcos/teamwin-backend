@@ -244,7 +244,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             UserActivation.participate.delay(request.user)
         except:
             UserActivation.participate(request.user)
-        return Response({'status': 'You left the team %s' % team.id})
+        return Response({'status': 'Message sent to players of team %s' % team.name})
 
     @detail_route(methods=['post'])
     def upload_avatar(self, request, *args, **kwargs):
