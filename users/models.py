@@ -41,7 +41,7 @@ def get_fb_friends(user):
 
 @shared_task
 def send_push(users_ids, text, payload=None):
-    tokens = [d.token for d in Device.objects.filter(user_id__in=users_ids)]
+    tokens = [u.devices.first().token for u in get_user_model().objects.filter(id__in=users_ids) if u.devices.count() > 0]
     if tokens:
         post_data = {
             'tokens': tokens,
