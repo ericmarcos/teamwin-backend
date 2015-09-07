@@ -452,7 +452,7 @@ class Team(models.Model):
         return m.state
 
     def call_players(self, user, message):
-        recipients = [u.id for u in self.players.all() if u != user]
+        recipients = [u.id for u in self.active_players() if u != user]
         send_push.delay(recipients, u"%s de %s: %s" % (user.first_name, self.name, message))
         TeamPlayerMessage.objects.create(player=user, team=self, message=message)
 
@@ -553,7 +553,7 @@ class League(models.Model):
         all_teams = Team.objects.filter(matches__fixture=fixture)
         if not prev:
             all_teams = self.teams.all()
-        user_teams = all_teams.filter(players=user) if user else Team.objects.none()
+        user_teams = all_teams.filter(membership=Membership.objects.filter(player=u, state=Membership.STATE_ACTIVE)) if user else Team.objects.none()
         all_teams = all_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
         user_teams_points = user_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
         lb = list(all_teams.order_by('-sum_points')[:10])
@@ -688,6 +688,17 @@ class Fixture(models.Model):
             top_players += filter(lambda p:p.points==tlb[0].points, tlb)
         max_points = max(pl.points for pl in top_players)
         return list(set(filter(lambda p:p.points==max_points, top_players))) #Removing dupes
+
+    def get_players(self):
+        return get_user_model().objects.filter(matches__fixture=self).distinct()
+
+    def get_forecasts(self):
+        return PoolResult.objects.filter(pool__fixtures=self).annotate(
+            p=Count('players')).aggregate(Sum('p')).get('p__sum')
+
+    def get_extras(self):
+        m = Match.objects.filter(fixture=f).values('player', 'extra_points')
+        return len(filter(lambda x: x.get('extra_points'),m))
 
     def __unicode__(self):
         return unicode(self.name)
