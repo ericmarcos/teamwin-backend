@@ -15,21 +15,38 @@ def week_cohorts(n=16):
 
 def user_cohorts(time_cohorts):
     diff = time_cohorts[0] - time_cohorts[1]
-    return [get_user_model().objects.filter(date_joined__range=(
-        d - diff, d)) for d in time_cohorts]
+    return [get_user_model().objects.filter(profile__isnull=False, profile__is_pro=False,
+        is_staff=False, date_joined__range=(d - diff, d)) for d in time_cohorts]
+
+def team_cohorts(time_cohorts):
+    diff = time_cohorts[0] - time_cohorts[1]
+    return [Team.objects.filter(is_fake=False,
+        created_at__range=(d - diff, d)) for d in time_cohorts]
 
 def growth(time_cohorts):
     return [u.count() for u in user_cohorts(time_cohorts)]
+
+def team_growth(time_cohorts):
+    return [t.count() for t in team_cohorts(time_cohorts)]
 
 def daily_growth(n=30, days=1):
     dc = day_cohorts(n, days)
     return growth(dc)
 
+def daily_team_growth(n=30, days=1):
+    dc = day_cohorts(n, days)
+    return team_growth(dc)
+
 def weekly_growth(n=16):
     wc = week_cohorts(n)
     return growth(wc)
 
+def weekly_team_growth(n=16):
+    wc = week_cohorts(n)
+    return team_growth(wc)
+
 def active_users(queryset, period):
+    #In the future, when enough data is gathered, switch this by info in UserActivation
     fixtures = Fixture.objects.filter(start_date__range=period)
     matches = Match.objects.filter(fixture=fixtures, played__gt=0)
     return queryset.filter(matches=matches).distinct()
@@ -56,3 +73,20 @@ def weekly_retention_cohorts(n=16, absolute=True):
     uc = user_cohorts(wc)
     return [list(reversed(retention_cohort(u, wc, absolute)))[-i-1:]
         for i,u in enumerate(uc)]
+
+def virality(b,k):
+    if k >= 1:
+        return "to the moon!"
+    users = []
+    prev = 0
+    nxt = b
+    prev_new_users = 0
+    new_users = None
+    while nxt > prev and (not new_users or prev_new_users > new_users):
+        users += [nxt]
+        prev_new_users = new_users or nxt
+        new_users = round(k*(nxt - prev))
+        prev = nxt
+        nxt += new_users
+    users += [nxt]
+    return users[-1]
