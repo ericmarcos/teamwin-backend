@@ -697,7 +697,7 @@ class Fixture(models.Model):
             p=Count('players')).aggregate(Sum('p')).get('p__sum')
 
     def get_extras(self):
-        m = Match.objects.filter(fixture=f).values('player', 'extra_points')
+        m = Match.objects.filter(fixture=self).values('player', 'extra_points')
         return len(filter(lambda x: x.get('extra_points'),m))
 
     def __unicode__(self):
