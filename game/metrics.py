@@ -1,4 +1,5 @@
 from datetime import timedelta
+from itertools import chain
 from django.utils import timezone
 from .models import *
 
@@ -51,6 +52,13 @@ def active_users(queryset, period):
     matches = Match.objects.filter(fixture=fixtures, played__gt=0)
     return queryset.filter(matches=matches).distinct()
 
+def lonely_users():
+    tt = Team.objects.all().annotate(p=Count('players')).filter(p__lte=1)
+    uu = get_user_model().objects.filter(is_staff=False, profile__isnull=False, profile__is_pro=False,
+        membership=Membership.objects.filter(team=tt, state='state_active')).annotate(t=Count('teams')).filter(t__lte=1)
+    uuu = get_user_model().objects.filter(is_staff=False, profile__isnull=False, profile__is_pro=False).annotate(t=Count('teams')).filter(t=0)
+    return chain(uu,uuu)
+
 def retention_cohort(queryset, time_cohorts, absolute=True):
     '''absolute=True: returns absolute numbers,
     else as a % of the total number of users'''
@@ -90,3 +98,21 @@ def virality(b,k):
         nxt += new_users
     users += [nxt]
     return users[-1]
+
+def cleanup_fake_teams():
+    tt = Team.objects.filter(is_fake=True)
+    Membership.objects.filter(team=tt).exclude(state='state_active').delete()
+
+def activate_lonely_users():
+    cleanup_fake_teams()
+    tt = Team.objects.filter(is_fake=True).annotate(p=Count('players')).filter(p__lt=11)
+    ti = tt.iterator()
+    t = next(ti)
+    lu = lonely_users()
+    for i,u in enumerate(lu):
+        if t.players.count() == 11:
+            try:
+                t = next(ti)
+            except:
+                break
+        t.sign(u)
