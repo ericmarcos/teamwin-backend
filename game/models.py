@@ -553,7 +553,7 @@ class League(models.Model):
         all_teams = Team.objects.filter(matches__fixture=fixture)
         if not prev:
             all_teams = self.teams.all()
-        user_teams = all_teams.filter(membership=Membership.objects.filter(player=u, state=Membership.STATE_ACTIVE)) if user else Team.objects.none()
+        user_teams = all_teams.filter(membership=Membership.objects.filter(player=user, state=Membership.STATE_ACTIVE)) if user else Team.objects.none()
         all_teams = all_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
         user_teams_points = user_teams.annotate(sum_points=Sum(Case(When(matches__fixture=fixture, then='matches__score'))))
         lb = list(all_teams.order_by('-sum_points')[:10])
