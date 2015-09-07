@@ -690,7 +690,7 @@ class Fixture(models.Model):
         return list(set(filter(lambda p:p.points==max_points, top_players))) #Removing dupes
 
     def get_players(self):
-        return get_user_model().objects.filter(matches__fixture=self).distinct()
+        return get_user_model().objects.filter(matches=Match.objects.filter(fixture=self, played__gt=0)).distinct()
 
     def get_forecasts(self):
         return PoolResult.objects.filter(pool__fixtures=self).annotate(
