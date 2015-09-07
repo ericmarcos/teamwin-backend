@@ -349,6 +349,7 @@ class Team(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='teams', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
+    is_fake = models.BooleanField(default=False)
 
     def set_captain(self, user, check=True):
         if check:
