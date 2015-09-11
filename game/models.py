@@ -196,7 +196,7 @@ class Pool(models.Model):
                 raise CantPlayPool(self)
             r, created = PoolResult.objects.get_or_create(pool=self, name=result)
             r.players.add(player)
-            for team in player.teams.all():
+            for team in player.teams.filter(membership__state=Membership.STATE_ACTIVE):
                 for fixture in self.fixtures.all():
                     m, created = Match.objects.get_or_create(team=team, fixture=fixture, player=player)
                     m.played += 1
