@@ -1,3 +1,4 @@
+import random
 from datetime import timedelta
 from itertools import chain
 from django.utils import timezone
@@ -106,16 +107,20 @@ def cleanup_fake_teams():
     tt = Team.objects.filter(is_fake=True)
     Membership.objects.filter(team=tt).exclude(state='state_active').delete()
 
-def activate_lonely_users():
+def activate_lonely_users(all_users=False):
     cleanup_fake_teams()
-    tt = Team.objects.filter(is_fake=True).annotate(p=Count('players')).filter(p__lt=11)
+    tt = list(Team.objects.filter(is_fake=True).annotate(p=Count('players')).filter(p__lt=11))
     ti = tt.iterator()
     t = next(ti)
     lu = lonely_users()
     for i,u in enumerate(lu):
-        if t.players.count() == 11:
-            try:
-                t = next(ti)
-            except:
-                break
-        t.sign(u)
+        if all_users:
+            t = random.choice(tt)
+            t.sign(u)
+        else:
+            if t.players.count() == 11:
+                try:
+                    t = next(ti)
+                except:
+                    break
+            t.sign(u)
