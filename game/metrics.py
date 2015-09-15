@@ -46,7 +46,9 @@ def weekly_team_growth(n=16):
     wc = week_cohorts(n)
     return team_growth(wc)
 
-def active_users(queryset, period):
+def active_users(queryset, period, new=True):
+    if new:
+        return queryset.filter(activations=UserActivation.objects.filter(timestamp__range=period)).distinct()
     #In the future, when enough data is gathered, switch this by info in UserActivation
     fixtures = Fixture.objects.filter(start_date__range=period)
     matches = Match.objects.filter(fixture=fixtures, played__gt=0)
