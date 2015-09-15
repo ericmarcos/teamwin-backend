@@ -110,7 +110,7 @@ def cleanup_fake_teams():
 def activate_lonely_users(all_users=False):
     cleanup_fake_teams()
     tt = list(Team.objects.filter(is_fake=True).annotate(p=Count('players')).filter(p__lt=11))
-    ti = tt.iterator()
+    ti = iter(tt)
     t = next(ti)
     lu = lonely_users()
     for i,u in enumerate(lu):
