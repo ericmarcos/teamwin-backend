@@ -26,7 +26,8 @@ def get_bwin_odds():
             p = pools.filter(options__item__bwin_name=home['name']).filter(
                 options__item__bwin_name=away['name']).first()
             if p:
-                PoolResults.objects.update_or_create(pool=p, name='1', defaults={bwin_odds: home['odd']})
-                PoolResults.objects.update_or_create(pool=p, name='X', defaults={bwin_odds: tie['odd']})
-                PoolResults.objects.update_or_create(pool=p, name='2', defaults={bwin_odds: away['odd']})
+                print 'Updating %s' % p
+                PoolResult.objects.update_or_create(pool=p, name='1', defaults={bwin_odds: home['odd']})
+                PoolResult.objects.update_or_create(pool=p, name='X', defaults={bwin_odds: tie['odd']})
+                PoolResult.objects.update_or_create(pool=p, name='2', defaults={bwin_odds: away['odd']})
 
