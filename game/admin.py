@@ -39,8 +39,9 @@ class PoolAdmin(admin.ModelAdmin):
         except:
             return None
 
-    list_display = ('id', '__unicode__', 'fixture', 'league', 'state', 'button')
-    list_filter = ('state', 'fixtures__league')
+    list_display = ('id', '__unicode__', 'fixture', 'closing_date', 'league', 'state', 'button')
+    list_filter = ('state', 'fixtures__league', 'fixtures')
+    ordering = ('-closing_date',)
 
     class Media:
         js = (

@@ -19,3 +19,5 @@ requests==2.6.2
 readline==6.2.4.1
 redis==2.10.3
 mailchimp==2.0.9
+beautifulsoup4==4.4.0
+ftfy==4.0.0

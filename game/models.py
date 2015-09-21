@@ -267,6 +267,7 @@ class Pool(models.Model):
 class Item(models.Model):
     parent = models.ForeignKey("self", blank=True, null=True, related_name="members")
     name = models.CharField(max_length=255, blank=True, null=True)
+    bwin_name = models.CharField(max_length=255, blank=True, null=True)
     short_name = models.CharField(max_length=255, blank=True, null=True)
     number = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='items', null=True, blank=True)
@@ -701,6 +702,8 @@ class Fixture(models.Model):
         return len(filter(lambda x: x.get('extra_points'),m))
 
     def __unicode__(self):
+        if self.league:
+            return "%s - %s" % (unicode(self.league.name), unicode(self.name))
         return unicode(self.name)
 
     class Meta:
@@ -731,6 +734,15 @@ class Match(models.Model):
     extra_type = models.CharField(max_length=255, blank=True, null=True, choices=EXTRA_TYPE_CHOICES)
     extra_data = models.TextField(blank=True, null=True)
     extra_date = models.DateTimeField(blank=True, null=True)
+
+    @staticmethod
+    def clean(f):
+        #See also: http://stackoverflow.com/questions/8989221/django-select-only-rows-with-duplicate-field-values
+        for t in Team.objects.all():
+            pp = [m.player for m in Match.objects.filter(fixture=f, team=t)]
+            gar = set(pp) - set(t.active_players())
+            for g in gar:
+                Match.objects.filter(fixture=f, player=g, team=t).delete()
 
     def __unicode__(self):
         return "%s - %s - %s: %s" % (unicode(self.player), unicode(self.team), unicode(self.fixture), unicode(self.score))
