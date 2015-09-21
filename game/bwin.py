@@ -4,7 +4,7 @@ from ftfy import fix_text
 from .models import *
 
 
-def get_bwin_oods():
+def get_bwin_odds():
     pools = Pool.objects.filter(fixtures__league__name='Champions Bwin').open()
     def is_champions(item):
         return item.name == 'league' and item.has_attr('name') and 'Liga de Campeones' in item['name']
