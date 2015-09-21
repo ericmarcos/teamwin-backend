@@ -5,7 +5,7 @@ from .models import *
 
 
 def get_bwin_oods():
-    teams = ['Lyon', 'Valencia'] #TODO: get all teams names
+    pools = Pool.objects.filter(fixtures__league__name='Champions Bwin').open()
     def is_champions(item):
         return item.name == 'league' and item.has_attr('name') and 'Liga de Campeones' in item['name']
     def is_game_1X2(item):
@@ -16,6 +16,17 @@ def get_bwin_oods():
     for l in leagues:
         games = l.findAll(is_game_1X2)
         for g in games:
-            for result in g.findAll('result'):
-                print fix_text(result['name']), result['odd']
-            print '----------------------------'
+            option1 = ""
+            option2 = ""
+            home, tie, away = [{
+                'name': fix_text(res['name']),
+                'odd': float(res['odd'])}
+                for res in g.findAll('result')]
+
+            p = pools.filter(options__item__bwin_name=home['name']).filter(
+                options__item__bwin_name=away['name']).first()
+            if p:
+                PoolResults.objects.update_or_create(pool=p, name='1', defaults={bwin_odds: home['odd']})
+                PoolResults.objects.update_or_create(pool=p, name='X', defaults={bwin_odds: tie['odd']})
+                PoolResults.objects.update_or_create(pool=p, name='2', defaults={bwin_odds: away['odd']})
+

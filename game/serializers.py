@@ -61,6 +61,7 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
     fixture = serializers.SerializerMethodField()
     user_result = serializers.SerializerMethodField()
     result = serializers.SerializerMethodField()
+    bwin_odds = serializers.SerializerMethodField()
 
     def get_league(self, pool):
         try:
@@ -87,9 +88,12 @@ class PoolSerializer(serializers.HyperlinkedModelSerializer):
         except:
             return None
 
+    def get_bwin_odds(self, pool):
+        return {r.name: r.bwin_odds for r in pool.results.all()}
+
     class Meta:
         model = Pool
-        fields = ('url', 'id', 'title','created_at','closing_date','pool_type','public','state','options', 'league', 'fixture', 'user_result', 'result')
+        fields = ('url', 'id', 'title','created_at','closing_date','pool_type','public','state','options', 'league', 'fixture', 'user_result', 'result', 'bwin_odds')
 
 
 class MatchSerializer(serializers.ModelSerializer):

@@ -317,6 +317,7 @@ class PoolResult(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     players = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='results')
     is_winner = models.BooleanField(default=False)
+    bwin_odds = models.FloatField(blank=True, null=True)
 
     def __unicode__(self):
         return unicode(self.name)
