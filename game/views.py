@@ -122,7 +122,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             return Team.objects.all()
         if self.request.query_params.get('friends', self.request.data.get('friends')):
             try:
-                return Team.objects.friends(self.request.user)
+                return Team.objects.friends(self.request.user)[:10]
             except Exception as e:
                 raise ParseError(detail=str(e))
         elif self.request.query_params.get('pending', self.request.data.get('pending')):
