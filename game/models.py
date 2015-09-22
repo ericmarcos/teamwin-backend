@@ -522,6 +522,7 @@ class League(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.CharField(max_length=255, blank=True, null=True)
     pic = models.ImageField(upload_to='leagues', null=True, blank=True)
+    icon = models.ImageField(upload_to='leagues_icons', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True, editable=False)
     teams = models.ManyToManyField(Team, blank=True, related_name='leagues')
     visible = models.BooleanField(default=True)
@@ -600,10 +601,15 @@ class League(models.Model):
     def pools(self, prev=0):
         return Pool.objects.filter(fixtures=self.fixtures.prev(prev).first())
 
-
     def get_pic_url(self):
         if self.pic:
             return self.pic._get_url().split('?')[0]
+        else:
+            return ""
+
+    def get_icon_url(self):
+        if self.icon:
+            return self.icon._get_url().split('?')[0]
         else:
             return ""
 

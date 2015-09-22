@@ -251,6 +251,7 @@ class PrizeSerializer(serializers.HyperlinkedModelSerializer):
 
 class LeagueSerializer(serializers.HyperlinkedModelSerializer):
     pic = serializers.ReadOnlyField(source='get_pic_url')
+    icon = serializers.ReadOnlyField(source='get_icon_url')
     leaderboard = serializers.SerializerMethodField()
     prev_leaderboard = serializers.SerializerMethodField()
     prizes = PrizeSerializer(many=True, read_only=True)
@@ -275,4 +276,4 @@ class LeagueSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = League
-        fields = ('url', 'id', 'name','pic','description','leaderboard','prev_leaderboard', 'prizes', 'pools', 'prev_pools')
+        fields = ('url', 'id', 'name','pic','icon','description','leaderboard','prev_leaderboard', 'prizes', 'pools', 'prev_pools')
