@@ -137,6 +137,8 @@ class TeamViewSet(viewsets.ModelViewSet):
             check_user_limits(self.request.user)
             team = serializer.save()
             team.set_captain(self.request.user, check=False)
+            for league in League.objects.visible():
+                league.enroll(self.request.user, team.id)
         except Exception as e:
             raise ParseError(detail=str(e))
         try:
