@@ -109,6 +109,11 @@ class PoolQuerySet(models.QuerySet):
         return self.open().filter(fixtures=f).exclude(results__players=player).distinct()
 
     def current(self, player):
+        #Temporal solution for users that didn't update to new version of the app
+        f = Fixture.objects.current().filter(league__id=1)
+        return self.filter(fixtures=f).distinct()
+
+    def current2(self, player):
         f = Fixture.objects.current().filter(league__teams__players=player)
         return self.filter(fixtures=f).distinct()
 

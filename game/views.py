@@ -271,6 +271,8 @@ class PoolViewSet(viewsets.ModelViewSet):
                 return Pool.objects.played(self.request.user)
             elif self.request.query_params.get('current', self.request.data.get('current')):
                 return Pool.objects.current(self.request.user)
+            elif self.request.query_params.get('current2', self.request.data.get('current2')):
+                return Pool.objects.current2(self.request.user)
         return Pool.objects.public()
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated,])
