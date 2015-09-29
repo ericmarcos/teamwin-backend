@@ -147,6 +147,10 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 # SOCIAL AUTH
 
+OAUTH2_PROVIDER = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 60*60*24*30
+}
+
 AUTHENTICATION_BACKENDS = (
     # Facebook OAuth2
     'social.backends.facebook.FacebookAppOAuth2',
