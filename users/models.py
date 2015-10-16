@@ -116,7 +116,7 @@ class UserActivation(models.Model):
     LEVEL_LOGIN = 1
     LEVEL_PARTICIPATE = 2
     LEVEL_CREATE = 3
-    LEVEL_BUY = 4
+    LEVEL_PLAY = 4
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="activations", blank=True, null=True) 
     timestamp = models.DateTimeField()
@@ -150,5 +150,5 @@ class UserActivation(models.Model):
 
     @staticmethod
     @shared_task
-    def buy(user):
-        UserActivation.new_activation(user, UserActivation.LEVEL_BUY)
+    def play(user):
+        UserActivation.new_activation(user, UserActivation.LEVEL_PLAY)

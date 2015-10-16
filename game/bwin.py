@@ -16,13 +16,11 @@ def get_bwin_odds():
     for l in leagues:
         games = l.findAll(is_game_1X2)
         for g in games:
-            option1 = ""
-            option2 = ""
             home, tie, away = [{
                 'name': fix_text(res['name']),
                 'odd': float(res['odd'])}
                 for res in g.findAll('result')]
-
+            print 'found %s | %s' % (home['name'], away['name'])
             p = pools.filter(options__item__bwin_name=home['name']).filter(
                 options__item__bwin_name=away['name']).first()
             if p:

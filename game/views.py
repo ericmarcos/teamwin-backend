@@ -284,9 +284,9 @@ class PoolViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ParseError(detail=str(e))
         try:
-            UserActivation.participate.delay(request.user)
+            UserActivation.play.delay(request.user)
         except:
-            UserActivation.participate(request.user)
+            UserActivation.play(request.user)
         return Response({'status': 'Result %s played for pool %s' % (result, pool)})
 
     @detail_route(methods=['post'], authentication_classes=[CSRFExcemptSessionAuthentication])

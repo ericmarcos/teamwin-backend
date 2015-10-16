@@ -86,6 +86,9 @@ def weekly_retention_cohorts(n=16, absolute=True):
     return [list(reversed(retention_cohort(u, wc, absolute)))[-i-1:]
         for i,u in enumerate(uc)]
 
+def forecasts(fixture):
+    Match.objects.filter(fixture=fixture).values('player').distinct().aggregate(p=Sum('played'))
+
 def virality(b,k):
     if k >= 1:
         return "to the moon!"
