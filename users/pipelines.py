@@ -19,7 +19,10 @@ def save_profile(backend, user, response, *args, **kwargs):
         user.profile.location = response.get('location')
         user.profile.timezone = response.get('timezone')
         user.profile.save()
-        register_email_mailchimp.delay(user.id)
+        try:
+            register_email_mailchimp.delay(user.id)
+        except:
+            register_email_mailchimp(user.id)
 
 
 #http://stackoverflow.com/questions/19890824/save-facebook-profile-picture-in-model-using-python-social-auth
