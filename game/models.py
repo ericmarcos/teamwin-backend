@@ -290,6 +290,7 @@ class Item(models.Model):
 
     class Meta:
         app_label = 'game'
+        ordering = ['name',]
 
 
 class PoolOption(models.Model):
