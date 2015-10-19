@@ -479,7 +479,7 @@ class Team(models.Model):
         return unicode(self.name)
 
     class Meta:
-        ordering = ['-name',]
+        ordering = ['name',]
         app_label = 'game'
 
 
@@ -721,7 +721,7 @@ class Fixture(models.Model):
 
     class Meta:
         app_label = 'game'
-        ordering = ['-league__name', '-name']
+        ordering = ['-league__name', '-end_date']
 
 
 class Match(models.Model):
