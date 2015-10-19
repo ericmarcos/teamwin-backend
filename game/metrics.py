@@ -87,7 +87,7 @@ def weekly_retention_cohorts(n=16, absolute=True):
         for i,u in enumerate(uc)]
 
 def forecasts(fixture):
-    Match.objects.filter(fixture=fixture).values('player').distinct().aggregate(p=Sum('played'))
+    return Match.objects.filter(fixture=fixture).values('player').distinct().aggregate(p=Sum('played'))
 
 def virality(b,k):
     if k >= 1:
