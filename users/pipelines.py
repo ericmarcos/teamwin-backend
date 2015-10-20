@@ -49,7 +49,10 @@ def save_friends(backend, user, response, *args, **kwargs):
                 msg = 'Tu amiga %s acaba de unirse a Teamwin.' % (user.first_name or user.username)
             else:
                 msg = 'Tu amigo %s acaba de unirse a Teamwin.' % (user.first_name or user.username)
-            send_push.delay([f.id for f in friends], msg)
+            try:
+                send_push.delay([f.id for f in friends], msg)
+            except:
+                send_push([f.id for f in friends], msg)
         except Exception as e:
             pass
 
