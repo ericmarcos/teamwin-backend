@@ -335,6 +335,8 @@ class LeagueViewSet(viewsets.ModelViewSet):
             etype = request.query_params.get('type', request.data.get('type'))
             edata = request.query_params.get('data', request.data.get('data'))
             league.extra_points(request.user, etype, edata)
+            # Dirty Hot fix for 2 extra points bug in mobile app
+            League.objects.all().exclude(id=league.id).first().extra_points(request.user, etype, edata)
         except Exception as e:
             raise ParseError(detail=str(e))
         return Response({'status': 'User won +2 extra points'})
