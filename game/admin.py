@@ -72,6 +72,7 @@ class PrizeInline(admin.StackedInline):
 class FixtureInline(admin.StackedInline):
     model = Fixture
     extra = 0
+    readonly_fields = ('get_winners',)
 
 
 class LeagueAdmin(admin.ModelAdmin):

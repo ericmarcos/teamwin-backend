@@ -130,7 +130,7 @@ class UserActivation(models.Model):
     def new_activation(user, level=1, timestamp=None):
         now = timestamp or timezone.now()
         last_activation = user.activations.filter(level=level).order_by("-timestamp").first()
-        if not last_activation or last_activation.timestamp < now - timedelta(hours=1):
+        if level == LEVEL_PLAY or not last_activation or last_activation.timestamp < now - timedelta(hours=1):
             UserActivation.objects.create(user=user, timestamp=now, level=level)
 
     @staticmethod
